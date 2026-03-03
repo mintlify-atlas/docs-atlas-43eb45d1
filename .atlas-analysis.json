@@ -1,0 +1,115 @@
+{
+  "projectType": "sdk-library",
+  "projectName": "Kinetix Charts",
+  "projectDescription": "High-performance, dependency-free charting library built with TypeScript and HTML5 Canvas",
+  "theme": "palm",
+  "primaryColor": "#6366f1",
+  "lightColor": "#818cf8",
+  "darkColor": "#4f46e5",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "installation",
+              "quickstart"
+            ]
+          },
+          {
+            "group": "Chart Types",
+            "pages": [
+              "charts/line",
+              "charts/bar",
+              "charts/scatter",
+              "charts/pie"
+            ]
+          },
+          {
+            "group": "Core Concepts",
+            "pages": [
+              "concepts/theming",
+              "concepts/interactions",
+              "concepts/performance",
+              "concepts/animations"
+            ]
+          },
+          {
+            "group": "Advanced Features",
+            "pages": [
+              "advanced/stacking",
+              "advanced/delta-mode",
+              "advanced/large-datasets",
+              "advanced/export"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "Core",
+            "pages": [
+              "api/chart",
+              "api/configuration"
+            ]
+          },
+          {
+            "group": "Series",
+            "pages": [
+              "api/line-series",
+              "api/bar-series",
+              "api/scatter-series",
+              "api/pie-series"
+            ]
+          },
+          {
+            "group": "Components",
+            "pages": [
+              "api/scales",
+              "api/axes",
+              "api/legend"
+            ]
+          },
+          {
+            "group": "Utilities",
+            "pages": [
+              "api/stack",
+              "api/lttb"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "High-performance canvas-based rendering",
+    "Zero runtime dependencies",
+    "Multiple chart types (Line, Bar, Scatter, Pie/Donut)",
+    "LTTB downsampling for large datasets",
+    "Interactive pan and zoom",
+    "Responsive and themeable",
+    "Built-in animations",
+    "Smart legend positioning"
+  ],
+  "publicApiSurface": [
+    "Chart",
+    "LineSeries",
+    "BarSeries",
+    "PieSeries",
+    "ScatterSeries",
+    "SceneGraph",
+    "InteractionManager",
+    "AxisLayer",
+    "GridLayer",
+    "Scale",
+    "LinearScale",
+    "CategoricalScale",
+    "Transform",
+    "stack()"
+  ]
+}
