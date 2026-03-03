@@ -40,7 +40,7 @@ for (let i = 0; i < 100000; i++) {
 }
 
 const series = new LineSeries(container, 1);
-scales.setScales(chart.xScale, chart.yScale);
+series.setScales(chart.xScale, chart.yScale);
 
 // LTTB automatically downsamples to ~2000 points
 series.setData(largeData);
@@ -54,35 +54,20 @@ chart.addSeries(series);
 - Faster pan and zoom operations
 - Preserved visual accuracy
 
-## Function signature
+## Implementation details
+
+<Note>
+The LTTB algorithm is an **internal implementation** in Kinetix Charts. It is not exported as part of the public API and cannot be imported or called directly. The downsampling happens automatically when you add data to a series.
+</Note>
+
+The internal function signature is:
 
 ```typescript
+// Internal function - not exported
 function lttb(data: Point[], threshold: number): Point[]
 ```
 
-### Parameters
-
-<ParamField path="data" type="Point[]" required>
-  The original dataset to downsample. Each point has `x` and `y` numeric properties.
-</ParamField>
-
-<ParamField path="threshold" type="number" required>
-  The target number of points in the downsampled result.
-  
-  - If `threshold` is 0, returns an empty array
-  - If `threshold` is greater than or equal to the data length, returns the original data
-  - Otherwise, downsamples to approximately `threshold` points
-</ParamField>
-
-### Returns
-
-<ResponseField name="sampled" type="Point[]">
-  A downsampled array of data points that preserves the visual shape of the original dataset.
-  
-  - Always includes the first and last points from the original data
-  - Selects intermediate points using the largest-triangle-three-buckets algorithm
-  - Length will be approximately equal to `threshold`
-</ResponseField>
+This function is used internally by `LineSeries` and `ScatterSeries` when rendering datasets larger than 2000 points.
 
 ## How the algorithm works
 
@@ -95,40 +80,28 @@ The LTTB algorithm:
    - The average of points in the next bucket
 4. **Preserves visual features**: This triangle-based selection naturally preserves peaks, valleys, and trend changes
 
-## Example usage
+## Automatic application
 
-<CodeGroup>
-```typescript Manual downsampling
-import { lttb } from 'kinetix-charts';
+LTTB is applied automatically by the library. You don't need to call any functions or configure anything:
 
-// Original dataset with 10,000 points
-const originalData = [
-  { x: 0, y: 10 },
-  { x: 1, y: 12 },
-  // ... 9,998 more points
-];
+```typescript
+import { Chart, LineSeries } from 'kinetix-charts';
 
-// Downsample to 500 points
-const downsampled = lttb(originalData, 500);
+// Create a large dataset
+const largeData = [];
+for (let i = 0; i < 50000; i++) {
+  largeData.push({ x: i, y: Math.sin(i / 1000) * 50 + 50 });
+}
 
-console.log(downsampled.length); // ~500
+// Just add the data - LTTB is applied automatically
+const chart = new Chart(container, {
+  series: [{
+    type: 'line',
+    name: 'Large Dataset',
+    data: largeData // Automatically downsampled to ~2000 points
+  }]
+});
 ```
-
-```typescript Custom threshold
-import { LineSeries, lttb } from 'kinetix-charts';
-
-// Apply custom downsampling before passing to chart
-const rawData = generateLargeDataset(); // 50,000 points
-
-// Downsample to 1000 points instead of default 2000
-const customDownsampled = lttb(rawData, 1000);
-
-const series = new LineSeries(container, 1);
-series.setScales(chart.xScale, chart.yScale);
-series.setData(customDownsampled);
-chart.addSeries(series);
-```
-</CodeGroup>
 
 ## When LTTB is applied
 

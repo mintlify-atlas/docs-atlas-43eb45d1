@@ -5,52 +5,52 @@ description: Automatic legend generation with smart positioning and theme suppor
 
 The legend displays a color-coded list of series in the chart, automatically positioned to avoid obscuring data.
 
-## LegendLayer
+<Note>
+The legend is created and managed automatically by the `Chart` class. You don't need to instantiate `LegendLayer` directly—it's an internal component. The legend automatically updates when you add or modify series.
+</Note>
 
-Renders a legend box with series names and colors, featuring intelligent hover-based repositioning.
+## How it works
 
-### Constructor
+When you add series to a chart with names and colors, the legend is automatically generated:
 
 ```typescript
-new LegendLayer(container: HTMLElement, zIndex?: number)
+import { Chart } from 'kinetix-charts';
+
+const chart = new Chart(container, {
+  theme: 'dark',
+  series: [
+    {
+      type: 'line',
+      name: 'Revenue', // Shows in legend
+      color: '#3b82f6',
+      data: [{ x: 0, y: 10 }]
+    },
+    {
+      type: 'line',
+      name: 'Expenses', // Shows in legend
+      color: '#ef4444',
+      data: [{ x: 0, y: 5 }]
+    }
+  ]
+});
+
+// Legend is automatically rendered with series names and colors
 ```
 
-<ParamField path="container" type="HTMLElement" required>
-  The DOM element to attach the canvas layer to
-</ParamField>
+## Controlling the legend
 
-<ParamField path="zIndex" type="number" default="100">
-  The stacking order of this layer (typically highest to stay on top)
-</ParamField>
+The legend updates automatically through the Chart API:
 
-### Methods
+```typescript
+// The legend updates when you modify series
+chart.updateSeries(0, { 
+  name: 'New Name',
+  color: '#10b981' 
+});
 
-<ResponseField name="setSeries" type="(series: Series[]) => void">
-  Sets the series to display in the legend. Automatically deduplicates by name
-
-  ```typescript
-  legendLayer.setSeries([
-    { name: "Revenue", color: "#3b82f6" },
-    { name: "Expenses", color: "#ef4444" }
-  ]);
-  ```
-</ResponseField>
-
-<ResponseField name="setTheme" type="(theme: 'light' | 'dark') => void">
-  Updates the legend's visual theme
-
-  ```typescript
-  legendLayer.setTheme("dark");
-  ```
-</ResponseField>
-
-<ResponseField name="draw" type="() => void">
-  Renders the legend to the canvas
-
-  ```typescript
-  legendLayer.draw();
-  ```
-</ResponseField>
+// The legend theme follows the chart theme
+chart.setTheme('dark');
+```
 
 ## Automatic positioning
 
@@ -91,20 +91,33 @@ This prevents the legend from showing the same series multiple times.
 ## Example
 
 ```typescript
-const legendLayer = new LegendLayer(container, 100);
+import { Chart } from 'kinetix-charts';
 
-// Set theme
-legendLayer.setTheme("dark");
+const chart = new Chart(container, {
+  theme: 'dark',
+  series: [
+    {
+      type: 'line',
+      name: 'Sales',
+      color: '#10b981',
+      data: salesData
+    },
+    {
+      type: 'line',
+      name: 'Target',
+      color: '#f59e0b',
+      data: targetData
+    },
+    {
+      type: 'line',
+      name: 'Forecast',
+      color: '#8b5cf6',
+      data: forecastData
+    }
+  ]
+});
 
-// Add series
-legendLayer.setSeries([
-  { name: "Sales", color: "#10b981" },
-  { name: "Target", color: "#f59e0b" },
-  { name: "Forecast", color: "#8b5cf6" }
-]);
-
-// Render
-legendLayer.draw();
+// Legend automatically displays all three series
 ```
 
 ## Styling properties
