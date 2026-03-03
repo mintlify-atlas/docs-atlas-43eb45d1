@@ -1,0 +1,132 @@
+---
+title: Scales
+description: Scale classes for mapping data values to pixel coordinates
+---
+
+Scales are responsible for converting data values to pixel coordinates on the canvas. Kinetix Charts provides multiple scale types to handle different data formats.
+
+## Scale interface
+
+The base interface that all scale implementations must follow.
+
+<ParamField path="type" type="ScaleType">
+  The type of scale: `"linear"`, `"log"`, `"time"`, or `"categorical"`
+</ParamField>
+
+<ParamField path="domain" type="any[]">
+  The input data range. For numeric scales, this is `[number, number]`. For categorical scales, this is `string[]`
+</ParamField>
+
+<ParamField path="range" type="[number, number]">
+  The output pixel range as `[start, end]`
+</ParamField>
+
+### Methods
+
+<ResponseField name="toPixels" type="(value: number | string) => number">
+  Converts a data value to pixel coordinates
+
+  ```typescript
+  const pixels = scale.toPixels(100);
+  ```
+</ResponseField>
+
+<ResponseField name="invert" type="(pixels: number) => number | string">
+  Converts pixel coordinates back to data values
+
+  ```typescript
+  const value = scale.invert(250);
+  ```
+</ResponseField>
+
+## LinearScale
+
+Maps numeric values to pixels using linear interpolation.
+
+### Constructor
+
+```typescript
+new LinearScale(domain: [number, number], range: [number, number])
+```
+
+<ParamField path="domain" type="[number, number]" required>
+  The minimum and maximum data values
+</ParamField>
+
+<ParamField path="range" type="[number, number]" required>
+  The minimum and maximum pixel coordinates
+</ParamField>
+
+### Example
+
+```typescript
+const scale = new LinearScale([0, 100], [0, 500]);
+const pixels = scale.toPixels(50); // Returns 250
+const value = scale.invert(250); // Returns 50
+```
+
+## LogScale
+
+Maps numeric values to pixels using logarithmic scaling, useful for data that spans multiple orders of magnitude.
+
+### Constructor
+
+```typescript
+new LogScale(domain: [number, number], range: [number, number])
+```
+
+<ParamField path="domain" type="[number, number]" required>
+  The minimum and maximum data values (must be positive)
+</ParamField>
+
+<ParamField path="range" type="[number, number]" required>
+  The minimum and maximum pixel coordinates
+</ParamField>
+
+### Example
+
+```typescript
+const scale = new LogScale([1, 1000], [0, 500]);
+const pixels = scale.toPixels(10); // Logarithmic mapping
+```
+
+## CategoricalScale
+
+Maps categorical (string) values to evenly-spaced positions on the axis.
+
+### Constructor
+
+```typescript
+new CategoricalScale(domain: string[], range: [number, number])
+```
+
+<ParamField path="domain" type="string[]" required>
+  Array of category labels
+</ParamField>
+
+<ParamField path="range" type="[number, number]" required>
+  The minimum and maximum pixel coordinates
+</ParamField>
+
+### Properties
+
+<ParamField path="padding" type="number" default="0.5">
+  Controls spacing between categories
+</ParamField>
+
+### Example
+
+```typescript
+const scale = new CategoricalScale(
+  ["Q1", "Q2", "Q3", "Q4"],
+  [0, 400]
+);
+const pixels = scale.toPixels("Q2"); // Returns centered position for Q2
+const category = scale.invert(200); // Returns the category at pixel 200
+```
+
+### Notes
+
+- Categories are automatically centered within their bands
+- The `toPixels` method accepts either a category string or a numeric index
+- Returns empty string from `invert` if pixels are outside the range

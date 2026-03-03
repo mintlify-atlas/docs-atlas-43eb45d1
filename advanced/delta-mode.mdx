@@ -1,0 +1,155 @@
+---
+title: Delta mode
+description: Visualize small variations in bar charts by showing relative heights instead of absolute values
+---
+
+Delta mode is a specialized visualization technique for bar charts that makes small variations in data much easier to see. When your data has minor differences between values, delta mode magnifies the visual distinction while preserving the actual values in tooltips.
+
+## What is delta mode?
+
+Delta mode adjusts the visual representation of bars to show heights relative to the minimum value in the dataset, rather than starting all bars from zero. This makes small variations dramatically more visible.
+
+**Without delta mode**: Bars showing `[1000, 1002, 1001, 1005]` all appear nearly identical height.
+
+**With delta mode**: The same data shows clear visual differences, making the pattern of variation obvious at a glance.
+
+## When to use delta mode
+
+Delta mode is ideal when:
+
+- Your data has small variations around a large baseline value
+- You want to emphasize relative changes rather than absolute values
+- All values are close together (e.g., daily temperatures, stock prices, minor metric fluctuations)
+- The pattern of change is more important than the absolute scale
+
+<Warning>
+  Delta mode changes only the visual representation. Tooltips always display the actual Y values, not the relative heights (see `src/core/Chart.ts:758`).
+</Warning>
+
+## Enabling delta mode
+
+Set the `deltaMode` property to `true` on a `BarSeries`:
+
+```typescript
+import { Chart, BarSeries } from 'kinetix-charts';
+
+const chart = new Chart(container);
+const bar = new BarSeries(container, 1);
+
+bar.deltaMode = true;  // Enable delta mode
+bar.setData([
+  { x: 'Mon', y: 1000 },
+  { x: 'Tue', y: 1002 },
+  { x: 'Wed', y: 1001 },
+  { x: 'Thu', y: 1005 }
+]);
+
+chart.addSeries(bar);
+```
+
+## Configuration example
+
+You can also enable delta mode through the chart configuration:
+
+```typescript
+const chart = new Chart(container, {
+  series: [{
+    type: 'bar',
+    name: 'Daily Sales',
+    data: [
+      { x: 'Mon', y: 1000 },
+      { x: 'Tue', y: 1002 },
+      { x: 'Wed', y: 1001 },
+      { x: 'Thu', y: 1005 }
+    ],
+    deltaMode: true,  // Enable relative height display
+    color: '#6366f1'
+  }]
+});
+```
+
+<Note>
+  The `deltaMode` property is defined in `src/render/BarSeries.ts:8` and is processed during the draw operation at `src/render/BarSeries.ts:64-72`.
+</Note>
+
+## How delta mode calculates baselines
+
+When delta mode is enabled, the rendering logic:
+
+1. Finds the minimum Y value in the visible dataset
+2. Adds a small buffer (10% of the Y range) below the minimum for visual clarity
+3. Uses this calculated baseline as the starting point for all bars
+4. Draws bar heights from this baseline to each data point's Y value
+
+```typescript
+// From src/render/BarSeries.ts:64-72
+let deltaMinY = Infinity;
+if (this.deltaMode) {
+  for (const p of this.visibleData) {
+    if (p.y < deltaMinY) deltaMinY = p.y;
+  }
+  // Add small buffer below minimum for visual clarity
+  const yRange = Math.max(...this.visibleData.map((p) => p.y)) - deltaMinY;
+  deltaMinY = deltaMinY - yRange * 0.1;
+}
+```
+
+## Tooltips show actual values
+
+An important feature of delta mode is that while the visual heights are relative, tooltips always display the true Y values. This ensures users can see both the pattern (visual) and the actual data (tooltip).
+
+<CodeGroup>
+```typescript Visual representation
+// Bars drawn from deltaMinY baseline
+// Heights are exaggerated to show variation
+Bar heights: [very short, medium, short, tall]
+```
+
+```typescript Tooltip values
+// Actual Y values displayed
+Mon: 1000
+Tue: 1002
+Wed: 1001
+Thu: 1005
+```
+</CodeGroup>
+
+## Delta mode with stacking
+
+Delta mode can be combined with stacked bars. When a stacked series has delta mode enabled, the baseline adjustment applies to the bottom-most series:
+
+```typescript
+import { Chart, BarSeries, stack } from 'kinetix-charts';
+
+const series1 = [{ x: 0, y: 1000 }, { x: 1, y: 1002 }];
+const series2 = [{ x: 0, y: 50 }, { x: 1, y: 52 }];
+
+const stackedData = stack([series1, series2]);
+
+stackedData.forEach((data, i) => {
+  const bar = new BarSeries(container, 1);
+  if (i === 0) bar.deltaMode = true;  // Only first series
+  bar.setData(data);
+  chart.addSeries(bar);
+});
+```
+
+<Tip>
+  Delta mode is especially effective for time-series bar charts where you're tracking small day-to-day or hour-to-hour changes in metrics like page views, response times, or temperatures.
+</Tip>
+
+## Y-axis scaling behavior
+
+When delta mode is enabled, the chart's `updateYScale()` method detects it and disables the `startFromZero` behavior. This prevents the Y-axis from being forced to zero, which would defeat the purpose of delta mode:
+
+```typescript
+// From src/core/Chart.ts:332-339
+const hasDeltaMode = this.series.some(
+  (s) => s instanceof BarSeries && (s as BarSeries).deltaMode
+);
+
+// Start from zero if all values are positive, startFromZero is enabled, and no delta mode
+if (this.startFromZero && yMin > 0 && !hasDeltaMode) {
+  yMin = 0;
+}
+```

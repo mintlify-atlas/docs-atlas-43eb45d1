@@ -1,0 +1,94 @@
+---
+title: Installation
+description: Install Kinetix Charts in your project using npm, yarn, pnpm, or bun
+---
+
+# Installation
+
+Kinetix Charts can be installed using any modern JavaScript package manager. Choose your preferred tool below.
+
+## Install the package
+
+<CodeGroup>
+```bash npm
+npm install kinetix-charts
+```
+
+```bash yarn
+yarn add kinetix-charts
+```
+
+```bash pnpm
+pnpm add kinetix-charts
+```
+
+```bash bun
+bun add kinetix-charts
+```
+</CodeGroup>
+
+## Requirements
+
+Kinetix Charts has minimal requirements:
+
+- **Node.js**: Version 14 or higher (for build tools)
+- **Browser support**: Any modern browser with HTML5 Canvas support
+- **TypeScript**: Version 5.2 or higher (optional, but recommended)
+
+<Note>
+Kinetix Charts has **zero runtime dependencies**. The package is completely self-contained, which means:
+- Smaller bundle sizes for your application
+- No dependency conflicts
+- Faster installation
+- Reduced security surface area
+</Note>
+
+## Verify installation
+
+After installation, verify that Kinetix Charts is correctly installed by importing it in your project:
+
+```typescript
+import { Chart } from 'kinetix-charts';
+
+console.log('Kinetix Charts imported successfully!');
+```
+
+If the import succeeds without errors, you're ready to start building charts.
+
+## TypeScript support
+
+Kinetix Charts is written in TypeScript and includes full type definitions out of the box. No additional `@types` packages are needed.
+
+```typescript
+import { Chart, LineSeries, ChartConfig } from 'kinetix-charts';
+
+// Full TypeScript intellisense and type checking
+const config: ChartConfig = {
+  theme: 'dark',
+  series: [{
+    type: 'line',
+    name: 'Revenue',
+    data: [{ x: 0, y: 10 }]
+  }]
+};
+```
+
+## Module formats
+
+Kinetix Charts is distributed in multiple module formats to support different build tools and environments:
+
+- **ESM** (ES Modules): `kinetix-charts.js` - For modern bundlers like Vite, Webpack 5+, and Rollup
+- **UMD** (Universal Module Definition): `kinetix-charts.umd.cjs` - For legacy bundlers and direct browser usage
+
+Your bundler will automatically select the appropriate format based on your project configuration.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Create your first chart in under 5 minutes
+  </Card>
+  <Card title="Chart types" icon="chart-line" href="/charts/line">
+    Explore all available chart types
+  </Card>
+</CardGroup>

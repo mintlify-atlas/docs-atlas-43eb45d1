@@ -1,0 +1,452 @@
+---
+title: Chart
+description: Core chart class for creating and managing visualizations
+---
+
+The `Chart` class is the main entry point for creating charts with Kinetix. It manages the rendering, data, interactions, and all visual elements of your chart.
+
+## Constructor
+
+Create a new chart instance by providing a container element and optional configuration.
+
+```typescript
+const chart = new Chart(container: HTMLElement, config?: ChartConfig)
+```
+
+<ParamField path="container" type="HTMLElement" required>
+  The DOM element that will contain the chart. The chart will automatically size to fit this container.
+</ParamField>
+
+<ParamField path="config" type="ChartConfig">
+  Optional configuration object to initialize the chart with series, axes, theme, and other settings. See the [Configuration](/api/configuration) page for details.
+</ParamField>
+
+### Example
+
+<CodeGroup>
+```typescript Basic initialization
+const container = document.getElementById('chart');
+const chart = new Chart(container);
+```
+
+```typescript With configuration
+const container = document.getElementById('chart');
+const chart = new Chart(container, {
+  theme: 'dark',
+  series: [
+    {
+      type: 'line',
+      name: 'Sales',
+      data: [
+        { x: 0, y: 10 },
+        { x: 1, y: 20 },
+        { x: 2, y: 15 }
+      ]
+    }
+  ],
+  xAxis: {
+    type: 'numeric'
+  }
+});
+```
+</CodeGroup>
+
+## Public properties
+
+<ResponseField name="container" type="HTMLElement">
+  The DOM element containing the chart.
+</ResponseField>
+
+<ResponseField name="series" type="Series[]">
+  Array of all series currently in the chart.
+</ResponseField>
+
+<ResponseField name="padding" type="{ top: number; right: number; bottom: number; left: number }">
+  Padding around the chart area. Default: `{ top: 20, right: 20, bottom: 40, left: 60 }`
+</ResponseField>
+
+<ResponseField name="startFromZero" type="boolean">
+  Start Y axis from zero when all values are positive. Default: `true`
+</ResponseField>
+
+<ResponseField name="startXFromZero" type="boolean">
+  Start X axis from zero when all values are positive. Default: `false`
+</ResponseField>
+
+## Methods
+
+### update
+
+Update the chart with new configuration, replacing existing series and settings.
+
+```typescript
+chart.update(config: ChartConfig): void
+```
+
+<ParamField path="config" type="ChartConfig" required>
+  Complete or partial chart configuration to apply. This will replace any existing series if `config.series` is provided.
+</ParamField>
+
+<CodeGroup>
+```typescript Update series
+chart.update({
+  series: [
+    {
+      type: 'bar',
+      name: 'Revenue',
+      data: [{ x: 0, y: 100 }, { x: 1, y: 150 }]
+    }
+  ]
+});
+```
+
+```typescript Update theme and axes
+chart.update({
+  theme: 'dark',
+  xAxis: {
+    type: 'datetime',
+    visible: true
+  },
+  yAxis: {
+    visible: true
+  }
+});
+```
+</CodeGroup>
+
+### addSeries
+
+Add a new series to the chart without removing existing series.
+
+```typescript
+chart.addSeries(seriesConfig: SeriesConfig): void
+```
+
+<ParamField path="seriesConfig" type="SeriesConfig" required>
+  Configuration for the series to add. Can be a line, bar, pie, or scatter series configuration.
+</ParamField>
+
+```typescript Example
+chart.addSeries({
+  type: 'line',
+  name: 'New Series',
+  color: '#ef4444',
+  data: [
+    { x: 0, y: 5 },
+    { x: 1, y: 10 },
+    { x: 2, y: 8 }
+  ]
+});
+```
+
+### pan
+
+Pan the chart view horizontally. Only works with numeric/datetime axes (not categorical).
+
+```typescript
+chart.pan(dx: number, dy: number): void
+```
+
+<ParamField path="dx" type="number" required>
+  Horizontal pixel offset to pan. Positive values pan right, negative values pan left.
+</ParamField>
+
+<ParamField path="dy" type="number" required>
+  Vertical pixel offset (currently not used, reserved for future use).
+</ParamField>
+
+```typescript Example
+// Pan 50 pixels to the right
+chart.pan(50, 0);
+
+// Pan 50 pixels to the left
+chart.pan(-50, 0);
+```
+
+### zoom
+
+Zoom the chart view in or out around a specific pixel position.
+
+```typescript
+chart.zoom(factor: number, centerPixel: number): void
+```
+
+<ParamField path="factor" type="number" required>
+  Zoom factor. Values > 1 zoom in, values < 1 zoom out. For example, `2` zooms in 2x, `0.5` zooms out 2x.
+</ParamField>
+
+<ParamField path="centerPixel" type="number" required>
+  The pixel position (X coordinate) around which to zoom.
+</ParamField>
+
+```typescript Example
+// Zoom in 2x around the center of the chart
+const centerX = chart.container.clientWidth / 2;
+chart.zoom(2, centerX);
+
+// Zoom out 2x
+chart.zoom(0.5, centerX);
+```
+
+### toggleSeries
+
+Toggle the visibility of a series by index.
+
+```typescript
+chart.toggleSeries(index: number): void
+```
+
+<ParamField path="index" type="number" required>
+  Zero-based index of the series to toggle.
+</ParamField>
+
+```typescript Example
+// Toggle the first series
+chart.toggleSeries(0);
+```
+
+### setSeriesVisibility
+
+Set the visibility of a specific series.
+
+```typescript
+chart.setSeriesVisibility(index: number, visible: boolean): void
+```
+
+<ParamField path="index" type="number" required>
+  Zero-based index of the series to modify.
+</ParamField>
+
+<ParamField path="visible" type="boolean" required>
+  Whether the series should be visible.
+</ParamField>
+
+```typescript Example
+// Hide the first series
+chart.setSeriesVisibility(0, false);
+
+// Show the second series
+chart.setSeriesVisibility(1, true);
+```
+
+### getSeriesInfo
+
+Get information about all series in the chart.
+
+```typescript
+chart.getSeriesInfo(): Array<{
+  index: number;
+  name: string;
+  color: string;
+  visible: boolean;
+  type: string;
+}>
+```
+
+**Returns:** Array of objects containing series metadata.
+
+```typescript Example
+const seriesInfo = chart.getSeriesInfo();
+console.log(seriesInfo);
+// [
+//   { index: 0, name: 'Sales', color: '#ef4444', visible: true, type: 'line' },
+//   { index: 1, name: 'Revenue', color: '#f59e0b', visible: true, type: 'bar' }
+// ]
+```
+
+### updateAxis
+
+Update axis configuration without recreating the chart.
+
+```typescript
+chart.updateAxis(xAxisConfig?: Partial<AxisConfig>, yAxisConfig?: Partial<AxisConfig>): void
+```
+
+<ParamField path="xAxisConfig" type="Partial<AxisConfig>">
+  Partial X axis configuration to merge with existing settings.
+</ParamField>
+
+<ParamField path="yAxisConfig" type="Partial<AxisConfig>">
+  Partial Y axis configuration to merge with existing settings (currently uses same config as X axis).
+</ParamField>
+
+```typescript Example
+chart.updateAxis({
+  visible: true,
+  type: 'datetime',
+  xLabelFormat: (val) => new Date(val).toLocaleDateString()
+});
+```
+
+### setGridVisible
+
+Show or hide the grid lines.
+
+```typescript
+chart.setGridVisible(visible: boolean): void
+```
+
+<ParamField path="visible" type="boolean" required>
+  Whether the grid should be visible.
+</ParamField>
+
+```typescript Example
+// Show grid
+chart.setGridVisible(true);
+
+// Hide grid
+chart.setGridVisible(false);
+```
+
+### setTheme
+
+Change the chart theme.
+
+```typescript
+chart.setTheme(theme: 'light' | 'dark'): void
+```
+
+<ParamField path="theme" type="'light' | 'dark'" required>
+  The theme to apply.
+</ParamField>
+
+```typescript Example
+// Switch to dark theme
+chart.setTheme('dark');
+
+// Switch to light theme
+chart.setTheme('light');
+```
+
+### updateSeries
+
+Update properties of a specific series by index.
+
+```typescript
+chart.updateSeries(index: number, config: Partial<BaseSeriesConfig>): void
+```
+
+<ParamField path="index" type="number" required>
+  Zero-based index of the series to update.
+</ParamField>
+
+<ParamField path="config" type="Partial<BaseSeriesConfig>" required>
+  Partial series configuration with properties to update (color, name, visible).
+</ParamField>
+
+```typescript Example
+// Update series color and name
+chart.updateSeries(0, {
+  color: '#10b981',
+  name: 'Updated Series Name'
+});
+
+// Hide a series using updateSeries
+chart.updateSeries(0, { visible: false });
+```
+
+### getCanvasImage
+
+Generate a PNG data URL of the chart for export or display.
+
+```typescript
+chart.getCanvasImage(options?: {
+  scale?: number;
+  width?: number;
+  height?: number;
+  view?: { x: number; y: number; width: number; height: number };
+}): string
+```
+
+<ParamField path="options" type="object">
+  Optional export settings.
+</ParamField>
+
+<ParamField path="options.scale" type="number">
+  Scale factor for high resolution export. Default: `2` (for retina displays). Use `1` for standard resolution.
+</ParamField>
+
+<ParamField path="options.width" type="number">
+  Target width in pixels. Defaults to current chart width.
+</ParamField>
+
+<ParamField path="options.height" type="number">
+  Target height in pixels. Defaults to current chart height.
+</ParamField>
+
+<ParamField path="options.view" type="object">
+  Custom view window in data coordinates (advanced usage).
+</ParamField>
+
+**Returns:** PNG data URL string that can be used in an `<img>` tag or downloaded.
+
+```typescript Example
+// Get standard resolution image
+const imageUrl = chart.getCanvasImage({ scale: 1 });
+
+// Get high resolution image at specific size
+const hiResUrl = chart.getCanvasImage({
+  scale: 2,
+  width: 1200,
+  height: 600
+});
+
+// Display in an image element
+const img = document.createElement('img');
+img.src = hiResUrl;
+document.body.appendChild(img);
+```
+
+### downloadImage
+
+Download the chart as a PNG image file.
+
+```typescript
+chart.downloadImage(filename?: string, options?: {
+  scale?: number;
+  width?: number;
+  height?: number;
+  window?: { xMin: number; xMax: number; yMin?: number; yMax?: number };
+}): void
+```
+
+<ParamField path="filename" type="string">
+  Name of the file to download. Default: `'chart.png'`
+</ParamField>
+
+<ParamField path="options" type="object">
+  Optional export settings (same as `getCanvasImage` options).
+</ParamField>
+
+<ParamField path="options.scale" type="number">
+  Scale factor for high resolution. Default: `2`
+</ParamField>
+
+<ParamField path="options.width" type="number">
+  Target width in pixels.
+</ParamField>
+
+<ParamField path="options.height" type="number">
+  Target height in pixels.
+</ParamField>
+
+<ParamField path="options.window" type="object">
+  Custom data window to export (xMin, xMax, yMin, yMax).
+</ParamField>
+
+```typescript Example
+// Download with default settings
+chart.downloadImage();
+
+// Download with custom filename and size
+chart.downloadImage('my-chart.png', {
+  scale: 2,
+  width: 1920,
+  height: 1080
+});
+
+// Download a specific data window
+chart.downloadImage('chart-region.png', {
+  window: { xMin: 0, xMax: 100, yMin: 0, yMax: 50 }
+});
+```

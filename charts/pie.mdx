@@ -1,0 +1,227 @@
+---
+title: Pie and donut charts
+description: Display proportions and part-to-whole relationships with pie charts
+---
+
+Pie and donut charts show how individual parts contribute to a whole, making them ideal for displaying proportions, percentages, and composition of data.
+
+## When to use pie charts
+
+Pie charts work best when:
+- Showing parts of a whole (percentages, proportions)
+- Displaying composition of a dataset
+- Comparing a small number of categories (3-6 slices)
+- Visualizing market share, budget allocation, or survey results
+
+<Note>
+Avoid using pie charts when you have many categories (7+) or when precise value comparison is needed. Consider bar charts instead.
+</Note>
+
+## Basic example
+
+Create a simple pie chart showing traffic sources:
+
+```typescript
+import { Chart, PieSeries } from 'kinetix-charts';
+
+const container = document.getElementById('chart');
+const chart = new Chart(container);
+chart.series = [];
+
+const pie = new PieSeries(container, 1);
+
+pie.setData([
+  { label: 'Direct', value: 35, color: '#6366f1' },
+  { label: 'Organic', value: 28, color: '#22c55e' },
+  { label: 'Referral', value: 22, color: '#f59e0b' },
+  { label: 'Social', value: 15, color: '#ec4899' }
+]);
+
+chart.addSeries(pie);
+
+// Hide axes for pie charts
+chart.update({
+  xAxis: { visible: false },
+  yAxis: { visible: false }
+});
+```
+
+## Pie vs donut charts
+
+Control the chart style using the `innerRadius` property:
+
+<CodeGroup>
+```typescript Pie chart
+const pie = new PieSeries(container, 1);
+pie.innerRadius = 0; // Solid pie chart (default)
+pie.setData([...]);
+```
+
+```typescript Donut chart
+const pie = new PieSeries(container, 1);
+pie.innerRadius = 0.5; // Creates donut hole at 50% radius
+pie.setData([...]);
+```
+
+```typescript Thin donut
+const pie = new PieSeries(container, 1);
+pie.innerRadius = 0.7; // Thin ring at 70% radius
+pie.setData([...]);
+```
+</CodeGroup>
+
+<Tip>
+Donut charts (innerRadius > 0) work well for displaying a central metric or label in the empty center space.
+</Tip>
+
+## Data format
+
+Pie charts use a special data format with labels, values, and optional colors:
+
+```typescript
+interface PieData {
+  label: string;   // Category name
+  value: number;   // Numeric value
+  color?: string;  // Optional hex color
+}
+```
+
+<Steps>
+  <Step title="Define your data">
+    Create an array of objects with `label`, `value`, and optionally `color` properties.
+  </Step>
+  
+  <Step title="Create the series">
+    Instantiate a `PieSeries` with the container element and z-index.
+  </Step>
+  
+  <Step title="Configure the style">
+    Set `innerRadius` to create a donut chart (0 for solid pie).
+  </Step>
+  
+  <Step title="Load the data">
+    Call `setData()` with your data array and hide the axes.
+  </Step>
+</Steps>
+
+## Per-slice colors
+
+You can specify a custom color for each slice:
+
+```typescript
+pie.setData([
+  { label: 'A', value: 30, color: '#ef4444' }, // Red
+  { label: 'B', value: 70, color: '#3b82f6' }  // Blue
+]);
+```
+
+If no color is specified, the chart uses a default color palette:
+
+```typescript
+// Default colors
+colors = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6'];
+```
+
+## Hiding axes for pie charts
+
+Pie charts don't use traditional X and Y axes, so hide them for a cleaner look:
+
+```typescript
+chart.update({
+  xAxis: { visible: false },
+  yAxis: { visible: false }
+});
+```
+
+<Note>
+Always hide axes when using pie or donut charts to avoid confusion and improve visual clarity.
+</Note>
+
+## Configuration options
+
+### Inner radius
+
+Control the donut hole size (0-1):
+
+```typescript
+pie.innerRadius = 0;   // Solid pie chart
+pie.innerRadius = 0.5; // Medium donut
+pie.innerRadius = 0.7; // Thin ring
+```
+
+### Show labels
+
+Toggle percentage labels on slices:
+
+```typescript
+pie.showLabels = true;  // Show percentages (default)
+pie.showLabels = false; // Hide slice labels
+```
+
+<Tip>
+Percentage labels only appear on slices larger than 5% to avoid clutter.
+</Tip>
+
+### Show legend
+
+Control the legend display at the bottom:
+
+```typescript
+pie.showLegend = true;  // Show legend (default)
+pie.showLegend = false; // Hide legend
+```
+
+## Complete example
+
+Here's a full example creating a donut chart with all features:
+
+```typescript
+import { Chart, PieSeries } from 'kinetix-charts';
+
+const container = document.getElementById('chart');
+const chart = new Chart(container, {
+  theme: 'dark',
+  xAxis: { visible: false },
+  yAxis: { visible: false }
+});
+
+chart.series = [];
+
+const pie = new PieSeries(container, 1);
+
+// Configure donut style
+pie.innerRadius = 0.5;
+pie.showLabels = true;
+pie.showLegend = true;
+
+// Set data with custom colors
+pie.setData([
+  { label: 'Direct', value: 35, color: '#6366f1' },
+  { label: 'Organic', value: 28, color: '#22c55e' },
+  { label: 'Referral', value: 22, color: '#f59e0b' },
+  { label: 'Social', value: 15, color: '#ec4899' }
+]);
+
+chart.addSeries(pie);
+```
+
+## Advanced features
+
+### Animation control
+
+Control render animations for your pie series:
+
+```typescript
+// Disable animation
+pie.disableAnimation();
+
+// Enable with custom duration (ms)
+pie.enableAnimation(800);
+
+// Manually trigger animation
+pie.startAnimation();
+```
+
+<Note>
+Pie charts animate by drawing slices clockwise from the top. Labels and legends appear after the animation completes.
+</Note>

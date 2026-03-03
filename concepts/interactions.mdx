@@ -1,0 +1,258 @@
+---
+title: Interactions
+description: Enable users to explore data with pan, zoom, and interactive tooltips
+---
+
+Kinetix Charts provides built-in interactive features that allow users to explore their data dynamically. Interactions are automatically enabled for charts with numeric X-axis data.
+
+## Pan (click and drag)
+
+Pan allows users to move the visible area of the chart by clicking and dragging. This is useful for exploring different parts of large datasets.
+
+### How to pan
+
+1. Click and hold on the chart area
+2. Drag left or right to move along the X-axis
+3. Release to stop panning
+
+```typescript
+const chart = new Chart(container, {
+  series: [
+    {
+      type: 'line',
+      data: [{ x: 0, y: 10 }, { x: 1, y: 25 }, /* ... */]
+    }
+  ]
+});
+// Pan is automatically enabled for numeric X-axis
+```
+
+### Programmatic panning
+
+You can pan the chart programmatically using the `pan()` method.
+
+```typescript
+// Pan 50 pixels to the right
+chart.pan(50, 0);
+
+// Pan 100 pixels to the left
+chart.pan(-100, 0);
+```
+
+<Note>
+Panning is constrained to the data bounds. The chart will not pan beyond the minimum or maximum data values.
+</Note>
+
+## Zoom (scroll)
+
+Zoom allows users to focus on specific data ranges by scrolling on the chart.
+
+### How to zoom
+
+- **Scroll up**: Zoom in (shows less data with more detail)
+- **Scroll down**: Zoom out (shows more data)
+
+The zoom centers on the mouse cursor position, making it easy to zoom into specific areas of interest.
+
+```typescript
+// Zoom is automatically enabled for numeric X-axis charts
+const chart = new Chart(container, {
+  series: [
+    {
+      type: 'line',
+      data: largeDataset  // Works smoothly even with large datasets
+    }
+  ]
+});
+```
+
+### Programmatic zooming
+
+You can zoom the chart programmatically using the `zoom()` method.
+
+```typescript
+// Zoom in by 2x at pixel position 300
+chart.zoom(2, 300);
+
+// Zoom out by 0.5x at pixel position 400
+chart.zoom(0.5, 400);
+```
+
+### Zoom limits
+
+Kinetix Charts implements intelligent zoom limits:
+
+- **Maximum zoom in**: 1% of the total data range
+- **Maximum zoom out**: Cannot zoom beyond the data extent (with 15% buffer)
+
+<Tip>
+The Y-axis automatically scales to fit the visible data range when panning or zooming, ensuring optimal data visibility.
+</Tip>
+
+## Tooltips (hover)
+
+Tooltips display detailed information about data points when you hover over the chart.
+
+### Single series tooltips
+
+For charts with one series, the tooltip shows the X and Y values.
+
+```typescript
+const chart = new Chart(container, {
+  series: [
+    {
+      type: 'line',
+      name: 'Revenue',
+      data: [{ x: 0, y: 10 }, { x: 1, y: 25 }]
+    }
+  ]
+});
+// Hover over data points to see values
+```
+
+### Multi-series tooltips
+
+For charts with multiple series, the tooltip shows all values at the same X position, making it easy to compare values across series.
+
+```typescript
+const chart = new Chart(container, {
+  series: [
+    {
+      type: 'line',
+      name: 'Revenue',
+      color: '#6366f1',
+      data: [{ x: 0, y: 10 }, { x: 1, y: 25 }]
+    },
+    {
+      type: 'line',
+      name: 'Expenses',
+      color: '#ef4444',
+      data: [{ x: 0, y: 8 }, { x: 1, y: 12 }]
+    }
+  ]
+});
+// Tooltip shows both Revenue and Expenses at the same X position
+```
+
+The multi-series tooltip displays:
+- The X value at the top
+- Each series with a color indicator
+- The series name and Y value
+
+### Tooltip positioning
+
+Tooltips are intelligently positioned to avoid going off-screen:
+
+- **Default**: Appears to the right and below the cursor
+- **Near right edge**: Flips to the left of the cursor
+- **Near bottom edge**: Flips above the cursor
+
+<Note>
+Tooltips use the same formatting as axis labels, including smart number formatting (1M, 10K, etc.).
+</Note>
+
+## When interactions are enabled/disabled
+
+Interactions behave differently based on the X-axis type.
+
+### Numeric X-axis (interactions enabled)
+
+For charts with numeric X values, all interactions are enabled by default:
+
+```typescript
+const chart = new Chart(container, {
+  series: [
+    {
+      type: 'line',
+      data: [
+        { x: 0, y: 10 },
+        { x: 1, y: 25 },
+        { x: 2, y: 18 }
+      ]
+    }
+  ]
+});
+// ✓ Pan enabled
+// ✓ Zoom enabled  
+// ✓ Tooltips enabled
+```
+
+### Categorical X-axis (pan and zoom disabled)
+
+For charts with text labels (categorical data), pan and zoom are disabled because all categories should remain visible:
+
+```typescript
+const chart = new Chart(container, {
+  series: [
+    {
+      type: 'bar',
+      data: [
+        { x: 'Jan', y: 45 },
+        { x: 'Feb', y: 62 },
+        { x: 'Mar', y: 38 }
+      ]
+    }
+  ]
+});
+// ✗ Pan disabled
+// ✗ Zoom disabled
+// ✓ Tooltips enabled
+```
+
+<Warning>
+Pan and zoom are not supported for categorical X-axis charts. This ensures all category labels remain visible and accessible.
+</Warning>
+
+### Scrolling for categorical data
+
+For categorical charts with many data points, you can enable horizontal scrolling instead:
+
+```typescript
+const chart = new Chart(container, {
+  xAxis: {
+    type: 'categorical',
+    scrollable: true  // Enables horizontal scrolling
+  },
+  series: [/* ... */]
+});
+```
+
+## Interaction implementation details
+
+Interactions are managed by the `InteractionManager` class, which handles:
+
+- Mouse down events to start panning
+- Mouse move events for pan and tooltip updates
+- Mouse up events to end panning
+- Wheel events for zooming
+
+```typescript
+// From InteractionManager.ts:14-23
+attachListeners() {
+  const canvas = this.chart.sceneGraph.container;
+  
+  canvas.addEventListener('mousedown', this.onMouseDown.bind(this));
+  window.addEventListener('mousemove', this.onMouseMove.bind(this));
+  window.addEventListener('mouseup', this.onMouseUp.bind(this));
+  canvas.addEventListener('wheel', this.onWheel.bind(this), { 
+    passive: false 
+  });
+}
+```
+
+<Tip>
+The cursor changes to "grabbing" during panning to provide visual feedback to users.
+</Tip>
+
+## Custom label formatting
+
+You can customize how values are displayed in tooltips by providing custom formatters:
+
+```typescript
+chart.update({
+  yAxis: {
+    yLabelFormat: (val) => `$${val.toLocaleString()}`
+  }
+});
+// Tooltips will now show values as "$1,234" instead of "1.2K"
+```

@@ -1,0 +1,273 @@
+---
+title: BarSeries
+description: Bar chart series component for rendering categorical or discrete data as vertical bars
+---
+
+## Constructor
+
+Creates a new bar series instance.
+
+```typescript
+const barSeries = new BarSeries();
+```
+
+## Properties
+
+<ParamField path="color" type="string" default="#3b82f6">
+  Color of the bars. Defaults to Blue-500.
+</ParamField>
+
+<ParamField path="name" type="string" default="Series">
+  Name of the series displayed in the legend.
+</ParamField>
+
+<ParamField path="visible" type="boolean" default="true">
+  Whether the series is visible on the chart.
+</ParamField>
+
+<ParamField path="data" type="Point[]" default="[]">
+  Array of data points to render. Each point has `x` and `y` properties.
+</ParamField>
+
+<ParamField path="barWidth" type="number" default="0.8">
+  Width of bars relative to category width, from 0 to 1.
+</ParamField>
+
+<ParamField path="deltaMode" type="boolean" default="false">
+  Enable delta mode to show bar heights relative to minimum value for better visualization of small variations.
+</ParamField>
+
+<ParamField path="align" type="'center' | 'start' | 'end'" default="center">
+  Alignment of the bar relative to the X value. Use 'start' for histograms, 'center' for standard bar charts.
+</ParamField>
+
+<ParamField path="xScale" type="Scale | null" default="null">
+  Scale instance for X-axis coordinate transformation.
+</ParamField>
+
+<ParamField path="yScale" type="Scale | null" default="null">
+  Scale instance for Y-axis coordinate transformation.
+</ParamField>
+
+<ParamField path="animationEnabled" type="boolean" default="true">
+  Whether animations are enabled for this series.
+</ParamField>
+
+<ParamField path="animationDuration" type="number" default="600">
+  Duration of animations in milliseconds.
+</ParamField>
+
+## Methods
+
+### setData
+
+Updates the series data and triggers animation if enabled.
+
+<ParamField path="data" type="Point[]" required>
+  Array of data points where each point contains `x` and `y` values.
+</ParamField>
+
+```typescript
+barSeries.setData([
+  { x: "Q1", y: 100 },
+  { x: "Q2", y: 150 },
+  { x: "Q3", y: 120 },
+  { x: "Q4", y: 180 }
+]);
+```
+
+### setScales
+
+Sets the X and Y scales for coordinate transformation.
+
+<ParamField path="xScale" type="Scale" required>
+  Scale instance for X-axis transformation.
+</ParamField>
+
+<ParamField path="yScale" type="Scale" required>
+  Scale instance for Y-axis transformation.
+</ParamField>
+
+```typescript
+barSeries.setScales(xScale, yScale);
+```
+
+### render
+
+Renders the bar series on the canvas. Called automatically during the chart render cycle.
+
+```typescript
+barSeries.render();
+```
+
+### enableAnimation
+
+Enables animation for the series with an optional custom duration.
+
+<ParamField path="duration" type="number" default="600">
+  Animation duration in milliseconds.
+</ParamField>
+
+```typescript
+barSeries.enableAnimation(800);
+```
+
+### disableAnimation
+
+Disables animation for the series.
+
+```typescript
+barSeries.disableAnimation();
+```
+
+### startAnimation
+
+Manually triggers the render animation.
+
+```typescript
+barSeries.startAnimation();
+```
+
+### getDataAt
+
+Returns the data point at the given position if it intersects with a bar.
+
+<ParamField path="point" type="Point" required>
+  Position to query, typically mouse coordinates in pixels.
+</ParamField>
+
+<ResponseField name="return" type="Point | null">
+  The data point if the position intersects with a bar, or null otherwise.
+</ResponseField>
+
+```typescript
+const dataPoint = barSeries.getDataAt({ x: 100, y: 200 });
+```
+
+## Data format
+
+Bar series accepts an array of Point objects:
+
+<CodeGroup>
+```typescript Categorical X
+const data: Point[] = [
+  { x: "Product A", y: 100 },
+  { x: "Product B", y: 150 },
+  { x: "Product C", y: 120 },
+  { x: "Product D", y: 180 }
+];
+```
+
+```typescript Numeric X
+const data: Point[] = [
+  { x: 0, y: 100 },
+  { x: 1, y: 150 },
+  { x: 2, y: 120 },
+  { x: 3, y: 180 }
+];
+```
+
+```typescript Stacked bars
+// Stacking is handled by the Chart class
+// which adds y0 property to each point
+const data: Point[] = [
+  { x: "Q1", y: 100, y0: 0 },
+  { x: "Q2", y: 150, y0: 100 },
+  { x: "Q3", y: 120, y0: 250 }
+];
+```
+</CodeGroup>
+
+## Configuration
+
+When using the Chart API, configure bar series through the series config:
+
+```typescript BarSeriesConfig
+interface BarSeriesConfig {
+  type: "bar";
+  data: Point[];
+  color?: string;
+  visible?: boolean;
+  name?: string;
+  barWidth?: number;
+  deltaMode?: boolean;
+  align?: "center" | "start" | "end";
+  stacked?: boolean;
+}
+```
+
+## Bar width
+
+The `barWidth` property controls how much of the available space each bar occupies:
+
+```typescript
+// Thin bars (40% of category width)
+barSeries.barWidth = 0.4;
+
+// Default bars (80% of category width)
+barSeries.barWidth = 0.8;
+
+// Full width bars (100% of category width)
+barSeries.barWidth = 1.0;
+```
+
+## Delta mode
+
+Delta mode is useful for visualizing small variations in data by adjusting the baseline:
+
+```typescript
+barSeries.deltaMode = true;
+```
+
+When enabled:
+- Bars start from the minimum value in the dataset (with 10% buffer)
+- Better highlights differences when all values are large and similar
+- Automatically calculates appropriate baseline
+
+## Bar alignment
+
+Control how bars align relative to their X position:
+
+<Tabs>
+  <Tab title="Center">
+    Default alignment, centers bars on their X value:
+    ```typescript
+    barSeries.align = "center";
+    ```
+    Use for standard bar charts.
+  </Tab>
+  <Tab title="Start">
+    Aligns bars to start at their X value:
+    ```typescript
+    barSeries.align = "start";
+    ```
+    Use for histograms and time-based bars.
+  </Tab>
+  <Tab title="End">
+    Aligns bars to end at their X value:
+    ```typescript
+    barSeries.align = "end";
+    ```
+    Use for specialized layouts.
+  </Tab>
+</Tabs>
+
+## Animation
+
+By default, bar series animates on initial render and data updates. The animation:
+- Uses easeOutCubic easing function
+- Grows bars from baseline to target height
+- Duration is 600ms by default
+- Can be customized or disabled
+
+```typescript
+// Customize animation duration
+barSeries.enableAnimation(1000);
+
+// Disable animation
+barSeries.disableAnimation();
+```
+
+## Stacking
+
+Bar stacking is handled by the Chart class, which preprocesses data and adds `y0` properties to each point. When a point has a `y0` property, the bar is drawn from `y0` to `y` instead of from 0 to `y`.

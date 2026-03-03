@@ -1,0 +1,348 @@
+---
+title: Animations
+description: Control render animations for smooth and engaging data visualization
+---
+
+Kinetix Charts includes built-in render animations that bring your data visualizations to life. Animations are enabled by default and can be customized or disabled as needed.
+
+## Built-in render animations
+
+All chart types support smooth render animations that play when:
+- The chart is first created
+- Data is updated using `setData()`
+- Series are added to the chart
+
+```typescript
+const chart = new Chart(container, {
+  series: [
+    {
+      type: 'line',
+      data: [{ x: 0, y: 10 }, { x: 1, y: 25 }, { x: 2, y: 18 }]
+    }
+  ]
+});
+// Automatically animates on first render
+```
+
+### Animation for different chart types
+
+<Tabs>
+  <Tab title="Line charts">
+    Line charts animate from left to right, drawing the line progressively.
+    
+    ```typescript
+    const series = new LineSeries(container, 1);
+    series.setData(data);
+    // Line draws from left to right over 600ms
+    ```
+  </Tab>
+  
+  <Tab title="Bar charts">
+    Bar charts animate by growing from the baseline to their final height.
+    
+    ```typescript
+    const series = new BarSeries(container, 1);
+    series.setData(data);
+    // Bars grow from bottom to top over 600ms
+    ```
+  </Tab>
+  
+  <Tab title="Pie charts">
+    Pie charts animate by sweeping the slices clockwise from the starting angle.
+    
+    ```typescript
+    const series = new PieSeries(container, 1);
+    series.setData(data);
+    // Slices sweep in over 600ms
+    ```
+  </Tab>
+  
+  <Tab title="Scatter plots">
+    Scatter plots animate by fading in points progressively.
+    
+    ```typescript
+    const series = new ScatterSeries(container, 1);
+    series.setData(data);
+    // Points fade in over 600ms
+    ```
+  </Tab>
+</Tabs>
+
+## How to enable/disable animations
+
+Animations are enabled by default, but you can disable them for individual series or customize their behavior.
+
+### Disable animations
+
+To disable animations entirely for a series:
+
+```typescript
+const series = new LineSeries(container, 1);
+series.disableAnimation();
+series.setData(data);
+// Data renders instantly without animation
+```
+
+<Note>
+Disabling animations is useful for real-time data updates where smooth transitions aren't necessary.
+</Note>
+
+### Enable animations
+
+If you've disabled animations, you can re-enable them:
+
+```typescript
+const series = new LineSeries(container, 1);
+series.disableAnimation();
+
+// Later, re-enable animations
+series.enableAnimation();
+series.setData(newData);
+// Now animates again with default duration (600ms)
+```
+
+## Custom animation duration
+
+You can customize how long animations take by specifying a duration in milliseconds.
+
+```typescript
+const series = new LineSeries(container, 1);
+
+// Slower animation (1 second)
+series.enableAnimation(1000);
+
+// Faster animation (300ms)
+series.enableAnimation(300);
+
+// Default duration (600ms)
+series.enableAnimation(600);
+```
+
+### Recommended durations
+
+- **Fast**: 300-400ms for small datasets or quick updates
+- **Default**: 600ms for balanced feel
+- **Slow**: 800-1200ms for emphasis or presentation mode
+
+<Tip>
+For data updates in dashboards, use shorter durations (300-400ms) to keep the interface feeling responsive.
+</Tip>
+
+## Manual animation triggering
+
+You can manually trigger animations without changing the data.
+
+```typescript
+const series = new LineSeries(container, 1);
+series.setData(data);
+
+// Later, replay the animation
+series.startAnimation();
+```
+
+This is useful for:
+- Replaying animations on user interaction
+- Highlighting specific charts in presentations
+- Creating attention-grabbing effects
+
+## Animation API methods
+
+The `Series` base class provides several animation-related methods and properties.
+
+### Public methods
+
+<CodeGroup>
+```typescript startAnimation()
+/**
+ * Start the render animation from the beginning
+ * Resets progress to 0 and begins animating
+ */
+series.startAnimation();
+```
+
+```typescript disableAnimation()
+/**
+ * Disable animation for this series
+ * Sets progress to 1 (fully rendered)
+ * Cancels any ongoing animation frames
+ */
+series.disableAnimation();
+```
+
+```typescript enableAnimation(duration?)
+/**
+ * Enable animation for this series
+ * @param duration - Animation duration in milliseconds (default: 600)
+ */
+series.enableAnimation(800);  // 800ms duration
+```
+</CodeGroup>
+
+### Animation properties
+
+From the source code (`Series.ts:14-19`):
+
+```typescript
+protected animationProgress: number = 1;      // 0-1, 1 = fully rendered
+protected animationDuration: number = 600;     // ms
+protected animationStartTime: number = 0;      // Performance timestamp
+protected animationEnabled: boolean = true;    // Animation on/off
+protected isAnimating: boolean = false;        // Currently animating?
+protected animationFrameId: number | null = null;  // RAF handle
+```
+
+## Animation implementation details
+
+Kinetix Charts uses `requestAnimationFrame` for smooth, browser-optimized animations.
+
+### Easing function
+
+Animations use an **easeOutCubic** easing function for a natural feel:
+
+```typescript
+// From Series.ts:44-61
+protected animateFrame() {
+  if (!this.isAnimating) return;
+  
+  const elapsed = performance.now() - this.animationStartTime;
+  this.animationProgress = Math.min(1, elapsed / this.animationDuration);
+  
+  // Use easeOutCubic for smooth animation
+  this.animationProgress = 1 - Math.pow(1 - this.animationProgress, 3);
+  
+  this.draw();
+  
+  if (this.animationProgress < 1) {
+    this.animationFrameId = requestAnimationFrame(() => this.animateFrame());
+  } else {
+    this.isAnimating = false;
+    this.animationProgress = 1;
+  }
+}
+```
+
+The easeOutCubic function creates a smooth deceleration, starting fast and slowing down as it completes.
+
+### Automatic triggering
+
+Animations automatically trigger when data is set:
+
+```typescript
+// From Series.ts:26-33
+setData(data: Point[]) {
+  this.data = data;
+  this.updateVisibleData();
+  // Trigger animation on data update
+  if (this.animationEnabled) {
+    this.startAnimation();
+  }
+}
+```
+
+<Note>
+Animations are skipped if `animationEnabled` is false, ensuring instant rendering when needed.
+</Note>
+
+## Controlling animations via config
+
+While animations are primarily controlled at the series level, you can configure them when creating series:
+
+```typescript
+const series = new LineSeries(container, 1);
+
+// Option 1: Disable before setting data
+series.disableAnimation();
+series.setData(data);
+
+// Option 2: Customize duration
+series.enableAnimation(800);
+series.setData(data);
+
+// Option 3: Use defaults
+series.setData(data);  // Animates with 600ms duration
+```
+
+## Animation performance
+
+Animations are optimized for performance:
+
+- **RAF timing**: Uses `requestAnimationFrame` for 60fps smoothness
+- **Progress-based**: Each frame calculates progress (0-1) rather than incrementing
+- **Automatic cleanup**: Animation frames are properly cancelled when complete
+- **GPU acceleration**: Canvas operations benefit from hardware acceleration
+
+### Animation with large datasets
+
+Even with large datasets (100k+ points), animations remain smooth because:
+
+1. LTTB downsampling reduces points to ~2000
+2. Canvas rendering is hardware-accelerated
+3. Only visible progress is animated
+
+```typescript
+const largeData = [];
+for (let i = 0; i < 100000; i++) {
+  largeData.push({ x: i, y: Math.sin(i / 1000) * 50 + 50 });
+}
+
+const series = new LineSeries(container, 1);
+series.setData(largeData);
+// Animates smoothly despite 100k points
+```
+
+<Tip>
+For real-time data streams, disable animations to avoid queuing up multiple animation sequences:
+
+```typescript
+series.disableAnimation();
+setInterval(() => {
+  series.setData(getLatestData());
+}, 1000);
+```
+</Tip>
+
+## Best practices
+
+### When to use animations
+
+✅ **Use animations for:**
+- Initial chart renders
+- Occasional data updates
+- User-triggered data changes
+- Presentation modes
+
+❌ **Disable animations for:**
+- Real-time data streams (> 1 update/second)
+- Large dataset updates
+- Performance-critical applications
+- Automated testing
+
+### Choosing duration
+
+```typescript
+// Dashboard with frequent updates
+series.enableAnimation(300);  // Fast and responsive
+
+// Marketing page or presentation
+series.enableAnimation(1000);  // Slower, more dramatic
+
+// General application
+series.enableAnimation(600);  // Balanced (default)
+```
+
+### Memory management
+
+Animation frames are automatically cleaned up:
+
+```typescript
+// From Series.ts:63-70
+disableAnimation() {
+  this.animationEnabled = false;
+  this.animationProgress = 1;
+  if (this.animationFrameId) {
+    cancelAnimationFrame(this.animationFrameId);  // Cleanup!
+  }
+}
+```
+
+This ensures no memory leaks from orphaned animation frames.

@@ -1,0 +1,277 @@
+---
+title: Performance
+description: Learn how Kinetix Charts achieves high performance for large datasets
+---
+
+Kinetix Charts is designed to handle large datasets efficiently. It uses several optimization techniques to ensure smooth rendering and interactions even with 100,000+ data points.
+
+## Canvas-based rendering
+
+Unlike DOM-based charting libraries, Kinetix Charts uses HTML5 Canvas for direct pixel manipulation. This approach provides significant performance advantages:
+
+- **No DOM overhead**: Canvas rendering bypasses the browser's layout and reflow calculations
+- **Direct pixel control**: Each chart element is drawn directly to pixels
+- **Hardware acceleration**: Modern browsers use GPU acceleration for canvas operations
+- **Memory efficiency**: Only the visible pixels are stored, not a DOM tree
+
+```typescript
+const chart = new Chart(container, {
+  series: [
+    {
+      type: 'line',
+      data: largeDataset  // Renders efficiently on canvas
+    }
+  ]
+});
+```
+
+<Note>
+Canvas-based rendering handles 100k+ data points smoothly, as highlighted in the README features.
+</Note>
+
+## LTTB downsampling algorithm
+
+For datasets with more than 2,000 points, Kinetix Charts automatically applies the **Largest-Triangle-Three-Buckets (LTTB)** algorithm to reduce the number of points while preserving the visual shape of the data.
+
+### How LTTB works
+
+The LTTB algorithm intelligently selects which points to keep:
+
+1. **Bucket division**: Data is divided into buckets
+2. **Triangle area calculation**: For each bucket, it calculates triangle areas formed with neighboring points
+3. **Maximum area selection**: Selects the point that forms the largest triangle, preserving visual peaks and valleys
+
+```typescript
+// From LTTB.ts:6-79
+export function lttb(data: Point[], threshold: number): Point[] {
+  const dataLength = data.length;
+  if (threshold >= dataLength) {
+    return data;  // No downsampling needed
+  }
+  
+  const sampled: Point[] = [];
+  const every = (dataLength - 2) / (threshold - 2);
+  
+  sampled[0] = data[0];  // Always keep first point
+  
+  // ... algorithm selects points that preserve visual shape ...
+  
+  sampled[sampledIndex] = data[dataLength - 1];  // Always keep last point
+  
+  return sampled;
+}
+```
+
+### When downsampling activates
+
+<Tabs>
+  <Tab title="Small datasets">
+    Datasets with ≤ 2,000 points render without downsampling.
+    
+    ```typescript
+    const data = [];
+    for (let i = 0; i < 2000; i++) {
+      data.push({ x: i, y: Math.sin(i / 100) });
+    }
+    // All 2,000 points are rendered
+    ```
+  </Tab>
+  
+  <Tab title="Large datasets">
+    Datasets with > 2,000 points are automatically downsampled.
+    
+    ```typescript
+    const data = [];
+    for (let i = 0; i < 100000; i++) {
+      data.push({ x: i, y: Math.sin(i / 1000) * 50 + 50 });
+    }
+    // Automatically downsampled to ~2,000 points while preserving shape
+    ```
+  </Tab>
+</Tabs>
+
+<Tip>
+Downsampling is automatic and transparent. You don't need to configure anything - just pass your data and Kinetix Charts handles the optimization.
+</Tip>
+
+## Efficient updates
+
+Kinetix Charts only redraws when necessary, avoiding wasteful render operations.
+
+### Selective rendering
+
+The chart only re-renders when:
+- Data changes
+- User interactions occur (pan, zoom)
+- Configuration updates are applied
+- Window resizes happen
+
+```typescript
+// Triggers a render
+chart.update({ theme: 'dark' });
+
+// Also triggers a render
+chart.addSeries(newSeries);
+
+// Programmatic pan triggers a render
+chart.pan(50, 0);
+```
+
+### Y-axis auto-scaling
+
+When panning or zooming, the Y-axis automatically recalculates to show only the visible data range:
+
+```typescript
+// From Chart.ts:317-389
+updateYScale() {
+  const [xMin, xMax] = this.xScale.domain;
+  let yMin = Infinity;
+  let yMax = -Infinity;
+  
+  // Check all series for data in current X range
+  this.series.forEach((s) => {
+    s.data.forEach((p) => {
+      if (p.x >= xMin && p.x <= xMax) {
+        if (p.y < yMin) yMin = p.y;
+        if (p.y > yMax) yMax = p.y;
+      }
+    });
+  });
+  
+  // Update Y scale with visible range
+  this.yScale.domain = [yMin, yMax + buffer];
+}
+```
+
+This ensures optimal use of screen space and maintains readability during interactions.
+
+## Layer architecture
+
+Kinetix Charts uses a layered canvas architecture where different chart components are drawn on separate layers:
+
+- **Grid layer** (z-index: 0): Background grid lines
+- **Series layers** (z-index: 1): Data visualization (lines, bars, etc.)
+- **Axis layer** (z-index: 50): Axes and labels
+- **Legend layer** (z-index: 100): Legend
+
+### Benefits of layers
+
+1. **Selective updates**: Only changed layers need to be redrawn
+2. **Proper rendering order**: Z-index ensures correct visual stacking
+3. **Composition efficiency**: Final image is composed from layer canvases
+
+```typescript
+// From Chart.ts:63-74
+this.gridLayer = new GridLayer(this.wrapper, 0);
+this.axisLayer = new AxisLayer(this.wrapper, 50);
+this.legendLayer = new LegendLayer(this.wrapper, 100);
+
+this.sceneGraph.addLayer(this.gridLayer);
+this.sceneGraph.addLayer(this.axisLayer);
+this.sceneGraph.addLayer(this.legendLayer);
+```
+
+<Note>
+Series are added dynamically and always render between the grid and axis layers.
+</Note>
+
+## Large dataset example
+
+Here's a practical example of rendering 100,000 points smoothly:
+
+```typescript
+import { Chart, LineSeries } from 'kinetix-charts';
+
+// Generate 100k points
+const largeData = [];
+for (let i = 0; i < 100000; i++) {
+  largeData.push({ 
+    x: i, 
+    y: Math.sin(i / 1000) * 50 + 50 
+  });
+}
+
+const chart = new Chart(container, {
+  series: [
+    {
+      type: 'line',
+      name: 'Large Dataset',
+      color: '#6366f1',
+      data: largeData
+    }
+  ]
+});
+
+// LTTB automatically kicks in
+// Pan and zoom remain smooth
+```
+
+<Tip>
+The example above is taken directly from the README (lines 518-526) and demonstrates real-world performance capabilities.
+</Tip>
+
+## Performance best practices
+
+### Use appropriate chart types
+
+Different chart types have different performance characteristics:
+
+- **Line charts**: Best for large time-series datasets
+- **Bar charts**: Good for up to a few hundred categories
+- **Scatter plots**: Efficient for large point clouds
+- **Pie charts**: Best for small datasets (< 20 slices)
+
+### Limit series count
+
+While Kinetix Charts can handle multiple series, keep in mind:
+
+- Each series adds rendering overhead
+- Multi-series tooltips query all series
+- Recommended: < 10 series for optimal performance
+
+### Disable animations for real-time updates
+
+If you're updating data frequently (e.g., real-time monitoring), disable animations:
+
+```typescript
+const series = new LineSeries(container, 1);
+series.disableAnimation();
+// Now updates are instantaneous without animation overhead
+```
+
+### Use categorical scrolling wisely
+
+For categorical data with many items:
+
+```typescript
+const chart = new Chart(container, {
+  xAxis: {
+    type: 'categorical',
+    scrollable: true  // Only if you have > 20 categories
+  }
+});
+```
+
+<Warning>
+Avoid creating new Chart instances repeatedly. Reuse existing instances and update their data instead.
+</Warning>
+
+## Memory management
+
+Kinetix Charts is designed to be memory-efficient:
+
+- **Zero dependencies**: No additional libraries loaded
+- **Canvas cleanup**: Old canvases are properly disposed
+- **Data references**: Only stores references to your data, not copies
+- **Animation cleanup**: Animations are properly cancelled when not needed
+
+```typescript
+// From Series.ts:63-76
+disableAnimation() {
+  this.animationEnabled = false;
+  this.animationProgress = 1;
+  if (this.animationFrameId) {
+    cancelAnimationFrame(this.animationFrameId);  // Proper cleanup
+  }
+}
+```

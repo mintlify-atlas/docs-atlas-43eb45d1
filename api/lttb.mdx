@@ -1,0 +1,151 @@
+---
+title: LTTB
+description: Largest-Triangle-Three-Buckets algorithm for efficient downsampling of large datasets
+---
+
+The LTTB (Largest-Triangle-Three-Buckets) algorithm is an intelligent downsampling technique that reduces the number of data points while preserving the visual shape of the data. Kinetix Charts automatically applies LTTB when rendering datasets with more than 2000 points.
+
+## What is LTTB?
+
+LTTB is a downsampling algorithm that selects representative points from a large dataset by:
+
+1. Dividing data into buckets
+2. Selecting points that form the largest triangular areas
+3. Preserving visual features like peaks, valleys, and trends
+
+This approach maintains the visual integrity of charts while significantly reducing render overhead.
+
+## Automatic downsampling
+
+Kinetix Charts automatically applies LTTB downsampling when:
+
+- A dataset contains more than **2000 data points**
+- The series is rendered (line, scatter, or other point-based charts)
+
+No configuration is needed—the library handles this optimization automatically.
+
+## Performance benefits
+
+<CodeGroup>
+```typescript Large dataset example
+import { LineSeries } from 'kinetix-charts';
+
+// Generate 100,000 data points
+const largeData = [];
+for (let i = 0; i < 100000; i++) {
+  largeData.push({ 
+    x: i, 
+    y: Math.sin(i / 1000) * 50 + 50 
+  });
+}
+
+const series = new LineSeries(container, 1);
+scales.setScales(chart.xScale, chart.yScale);
+
+// LTTB automatically downsamples to ~2000 points
+series.setData(largeData);
+chart.addSeries(series);
+```
+</CodeGroup>
+
+**Benefits:**
+- Smooth rendering with 100k+ data points
+- Reduced memory usage
+- Faster pan and zoom operations
+- Preserved visual accuracy
+
+## Function signature
+
+```typescript
+function lttb(data: Point[], threshold: number): Point[]
+```
+
+### Parameters
+
+<ParamField path="data" type="Point[]" required>
+  The original dataset to downsample. Each point has `x` and `y` numeric properties.
+</ParamField>
+
+<ParamField path="threshold" type="number" required>
+  The target number of points in the downsampled result.
+  
+  - If `threshold` is 0, returns an empty array
+  - If `threshold` is greater than or equal to the data length, returns the original data
+  - Otherwise, downsamples to approximately `threshold` points
+</ParamField>
+
+### Returns
+
+<ResponseField name="sampled" type="Point[]">
+  A downsampled array of data points that preserves the visual shape of the original dataset.
+  
+  - Always includes the first and last points from the original data
+  - Selects intermediate points using the largest-triangle-three-buckets algorithm
+  - Length will be approximately equal to `threshold`
+</ResponseField>
+
+## How the algorithm works
+
+The LTTB algorithm:
+
+1. **Always includes endpoints**: The first and last data points are always preserved
+2. **Divides into buckets**: The remaining data is divided into buckets based on the threshold
+3. **Selects representative points**: For each bucket, it selects the point that forms the largest triangle area with:
+   - The previously selected point
+   - The average of points in the next bucket
+4. **Preserves visual features**: This triangle-based selection naturally preserves peaks, valleys, and trend changes
+
+## Example usage
+
+<CodeGroup>
+```typescript Manual downsampling
+import { lttb } from 'kinetix-charts';
+
+// Original dataset with 10,000 points
+const originalData = [
+  { x: 0, y: 10 },
+  { x: 1, y: 12 },
+  // ... 9,998 more points
+];
+
+// Downsample to 500 points
+const downsampled = lttb(originalData, 500);
+
+console.log(downsampled.length); // ~500
+```
+
+```typescript Custom threshold
+import { LineSeries, lttb } from 'kinetix-charts';
+
+// Apply custom downsampling before passing to chart
+const rawData = generateLargeDataset(); // 50,000 points
+
+// Downsample to 1000 points instead of default 2000
+const customDownsampled = lttb(rawData, 1000);
+
+const series = new LineSeries(container, 1);
+series.setScales(chart.xScale, chart.yScale);
+series.setData(customDownsampled);
+chart.addSeries(series);
+```
+</CodeGroup>
+
+## When LTTB is applied
+
+| Scenario | LTTB Applied? |
+|----------|---------------|
+| Dataset with 500 points | No - rendered as-is |
+| Dataset with 2000 points | No - rendered as-is |
+| Dataset with 2001 points | Yes - downsampled to ~2000 |
+| Dataset with 100,000 points | Yes - downsampled to ~2000 |
+
+## Visual accuracy
+
+LTTB is specifically designed to maintain visual accuracy. Unlike uniform sampling (taking every nth point), LTTB:
+
+- Preserves important visual features
+- Maintains peak and valley positions
+- Retains trend changes and inflection points
+- Adapts to data density variations
+
+The result is a chart that looks nearly identical to the full dataset while using a fraction of the memory and rendering much faster.

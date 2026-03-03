@@ -1,0 +1,272 @@
+---
+title: PieSeries
+description: Pie and donut chart series component for rendering proportional data as circular segments
+---
+
+## Constructor
+
+Creates a new pie series instance.
+
+```typescript
+const pieSeries = new PieSeries();
+```
+
+## Properties
+
+<ParamField path="pieData" type="PieData[]" default="[]">
+  Array of pie data entries. Each entry has `label`, `value`, and optional `color`.
+</ParamField>
+
+<ParamField path="name" type="string" default="Series">
+  Name of the series displayed in the legend.
+</ParamField>
+
+<ParamField path="colors" type="string[]" default="['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6']">
+  Array of default colors used for slices when individual colors are not specified.
+</ParamField>
+
+<ParamField path="innerRadius" type="number" default="0">
+  Inner radius as a fraction of outer radius (0-1). Set to 0 for pie chart, >0 for donut chart.
+</ParamField>
+
+<ParamField path="showLabels" type="boolean" default="true">
+  Whether to show percentage labels on slices (only for slices >5%).
+</ParamField>
+
+<ParamField path="showLegend" type="boolean" default="true">
+  Whether to show the legend below the chart.
+</ParamField>
+
+<ParamField path="animationEnabled" type="boolean" default="true">
+  Whether animations are enabled for this series.
+</ParamField>
+
+<ParamField path="animationDuration" type="number" default="600">
+  Duration of animations in milliseconds.
+</ParamField>
+
+## Methods
+
+### setData
+
+Updates the pie data and triggers animation if enabled.
+
+<ParamField path="data" type="PieData[]" required>
+  Array of pie data entries.
+</ParamField>
+
+```typescript
+pieSeries.setData([
+  { label: "Product A", value: 100, color: "#3b82f6" },
+  { label: "Product B", value: 150 },
+  { label: "Product C", value: 75 },
+  { label: "Product D", value: 200 }
+]);
+```
+
+### render
+
+Renders the pie series on the canvas. Called automatically during the chart render cycle.
+
+```typescript
+pieSeries.render();
+```
+
+### enableAnimation
+
+Enables animation for the series with an optional custom duration.
+
+<ParamField path="duration" type="number" default="600">
+  Animation duration in milliseconds.
+</ParamField>
+
+```typescript
+pieSeries.enableAnimation(800);
+```
+
+### disableAnimation
+
+Disables animation for the series.
+
+```typescript
+pieSeries.disableAnimation();
+```
+
+### startAnimation
+
+Manually triggers the render animation.
+
+```typescript
+pieSeries.startAnimation();
+```
+
+### getDataAt
+
+Returns the pie slice data at the given position if the position is within a slice.
+
+<ParamField path="point" type="Point" required>
+  Position to query, typically mouse coordinates in pixels.
+</ParamField>
+
+<ResponseField name="return" type="Point | null">
+  The pie data extended as a Point object if the position is within a slice, or null otherwise.
+</ResponseField>
+
+```typescript
+const sliceData = pieSeries.getDataAt({ x: 100, y: 200 });
+```
+
+## Data format
+
+Pie series uses a specialized PieData format:
+
+```typescript PieData interface
+interface PieData {
+  label: string;
+  value: number;
+  color?: string;
+}
+```
+
+<CodeGroup>
+```typescript Basic pie data
+const data: PieData[] = [
+  { label: "Revenue", value: 450000 },
+  { label: "Costs", value: 280000 },
+  { label: "Profit", value: 170000 }
+];
+```
+
+```typescript With custom colors
+const data: PieData[] = [
+  { label: "Chrome", value: 65, color: "#4285f4" },
+  { label: "Safari", value: 20, color: "#000000" },
+  { label: "Firefox", value: 10, color: "#ff7139" },
+  { label: "Edge", value: 5, color: "#0078d7" }
+];
+```
+
+```typescript Market share
+const data: PieData[] = [
+  { label: "Company A", value: 35.5 },
+  { label: "Company B", value: 28.3 },
+  { label: "Company C", value: 18.7 },
+  { label: "Others", value: 17.5 }
+];
+```
+</CodeGroup>
+
+## Configuration
+
+When using the Chart API, configure pie series through the series config:
+
+```typescript PieSeriesConfig
+interface PieSeriesConfig {
+  type: "pie";
+  data: PieData[];
+  color?: string;
+  visible?: boolean;
+  name?: string;
+  innerRadius?: number;
+}
+```
+
+## Pie vs donut charts
+
+Control the chart type using the `innerRadius` property:
+
+<Tabs>
+  <Tab title="Pie chart">
+    Standard pie chart with filled center:
+    ```typescript
+    pieSeries.innerRadius = 0;
+    ```
+  </Tab>
+  <Tab title="Donut chart">
+    Donut chart with hollow center:
+    ```typescript
+    pieSeries.innerRadius = 0.5; // 50% inner radius
+    ```
+    The value should be between 0 and 1, representing the fraction of the outer radius.
+  </Tab>
+</Tabs>
+
+## Labels and legend
+
+Control visibility of labels and legend:
+
+```typescript
+// Show percentage labels on slices
+pieSeries.showLabels = true;
+
+// Hide percentage labels
+pieSeries.showLabels = false;
+
+// Show legend below chart
+pieSeries.showLegend = true;
+
+// Hide legend
+pieSeries.showLegend = false;
+```
+
+Labels are only displayed on slices that represent more than 5% of the total to avoid visual clutter.
+
+## Colors
+
+Colors can be specified per slice or use default colors:
+
+```typescript
+// Custom colors per slice
+const data = [
+  { label: "A", value: 100, color: "#ff0000" },
+  { label: "B", value: 200, color: "#00ff00" }
+];
+
+// Default colors (cycles through color array)
+pieSeries.colors = ["#3b82f6", "#ef4444", "#10b981", "#f59e0b", "#8b5cf6"];
+```
+
+If a slice doesn't specify a color, it uses the color from the `colors` array based on its index (with wrapping).
+
+## Animation
+
+By default, pie series animates on initial render and data updates. The animation:
+- Uses easeOutCubic easing function
+- Draws slices progressively in a clockwise direction
+- Starts from the top (12 o'clock position)
+- Duration is 600ms by default
+- Labels and legend appear after animation completes
+
+```typescript
+// Customize animation duration
+pieSeries.enableAnimation(1000);
+
+// Disable animation
+pieSeries.disableAnimation();
+```
+
+## Layout
+
+The pie series automatically:
+- Centers the chart in the available space
+- Reserves 60px at the bottom for the legend (if enabled)
+- Sizes the radius to 75% of available space
+- Adapts to container dimensions
+
+## Hit testing
+
+The `getDataAt` method performs geometric hit testing:
+1. Calculates distance from center
+2. Checks if within outer radius and outside inner radius (for donuts)
+3. Calculates angle from center
+4. Determines which slice contains the angle
+5. Returns the slice data with position information
+
+## Use cases
+
+Pie and donut charts are ideal for:
+- Showing part-to-whole relationships
+- Displaying market share or composition
+- Visualizing budget allocation
+- Representing survey results
+- Comparing proportions (3-7 categories recommended)

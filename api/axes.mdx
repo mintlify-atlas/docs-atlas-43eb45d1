@@ -1,0 +1,183 @@
+---
+title: Axes
+description: Axis and grid rendering components for displaying chart coordinates
+---
+
+The axis system provides visual reference for data values, including axis lines, labels, and grid lines.
+
+## AxisLayer
+
+Renders X and Y axes with labels, tick marks, and theme support.
+
+### Constructor
+
+```typescript
+new AxisLayer(container: HTMLElement, zIndex: number, config?: AxisConfig)
+```
+
+<ParamField path="container" type="HTMLElement" required>
+  The DOM element to attach the canvas layer to
+</ParamField>
+
+<ParamField path="zIndex" type="number" required>
+  The stacking order of this layer
+</ParamField>
+
+<ParamField path="config" type="AxisConfig">
+  Configuration options for axis appearance and behavior
+</ParamField>
+
+### Methods
+
+<ResponseField name="setScales" type="(xScale: Scale, yScale: Scale) => void">
+  Sets the scale objects used to convert data values to pixel positions
+
+  ```typescript
+  axisLayer.setScales(xScale, yScale);
+  ```
+</ResponseField>
+
+<ResponseField name="draw" type="() => void">
+  Renders the axes and labels to the canvas
+
+  ```typescript
+  axisLayer.draw();
+  ```
+</ResponseField>
+
+## AxisConfig
+
+Configuration interface for customizing axis appearance and behavior.
+
+<ParamField path="visible" type="boolean" default="true">
+  Whether to display the axes
+</ParamField>
+
+<ParamField path="type" type="'numeric' | 'datetime' | 'categorical'" default="'numeric'">
+  The type of data being displayed
+</ParamField>
+
+<ParamField path="min" type="number">
+  Minimum value for the axis domain (overrides auto-calculated range)
+</ParamField>
+
+<ParamField path="max" type="number">
+  Maximum value for the axis domain (overrides auto-calculated range)
+</ParamField>
+
+<ParamField path="xTickCount" type="number" default="10">
+  Number of tick marks to display on the X axis
+</ParamField>
+
+<ParamField path="yTickCount" type="number" default="10">
+  Number of tick marks to display on the Y axis
+</ParamField>
+
+<ParamField path="xLabelFormat" type="(val: number) => string">
+  Custom formatter function for X axis labels
+
+  ```typescript
+  xLabelFormat: (val) => `$${val.toFixed(2)}`
+  ```
+</ParamField>
+
+<ParamField path="yLabelFormat" type="(val: number) => string">
+  Custom formatter function for Y axis labels
+
+  ```typescript
+  yLabelFormat: (val) => `${val}%`
+  ```
+</ParamField>
+
+<ParamField path="gridColor" type="string">
+  Color of the grid lines (CSS color value)
+</ParamField>
+
+<ParamField path="textColor" type="string">
+  Color of the axis labels. If not specified, uses theme-based colors
+</ParamField>
+
+<ParamField path="font" type="string" default="'12px sans-serif'">
+  CSS font specification for axis labels
+</ParamField>
+
+<ParamField path="theme" type="'light' | 'dark'" default="'light'">
+  Visual theme for the axes
+</ParamField>
+
+<ParamField path="scrollable" type="boolean">
+  Whether the axis supports scrolling (for large datasets)
+</ParamField>
+
+## Smart label formatting
+
+When no custom `yLabelFormat` is provided, the Y axis automatically formats large numbers for better readability:
+
+- Values >= 1,000,000 display as "M" (millions): `2.5M`
+- Values >= 1,000 display as "K" (thousands): `15K`
+- Values >= 1 display with up to 1 decimal place: `42.5`
+- Values < 1 display with up to 2 decimal places: `0.25`
+
+Trailing zeros are automatically removed for cleaner labels.
+
+### Example
+
+```typescript
+const axisLayer = new AxisLayer(container, 20, {
+  theme: "dark",
+  xTickCount: 8,
+  yTickCount: 6,
+  yLabelFormat: (val) => `$${val}`,
+  font: "14px Inter, sans-serif"
+});
+```
+
+## GridLayer
+
+Renders a grid of horizontal and vertical lines for visual reference.
+
+### Constructor
+
+```typescript
+new GridLayer(container: HTMLElement, zIndex: number)
+```
+
+<ParamField path="container" type="HTMLElement" required>
+  The DOM element to attach the canvas layer to
+</ParamField>
+
+<ParamField path="zIndex" type="number" required>
+  The stacking order of this layer (typically lower than data layers)
+</ParamField>
+
+### Methods
+
+<ResponseField name="setScales" type="(xScale: Scale, yScale: Scale) => void">
+  Sets the scale objects used to position grid lines
+
+  ```typescript
+  gridLayer.setScales(xScale, yScale);
+  ```
+</ResponseField>
+
+<ResponseField name="draw" type="() => void">
+  Renders the grid to the canvas
+
+  ```typescript
+  gridLayer.draw();
+  ```
+</ResponseField>
+
+### Example
+
+```typescript
+const gridLayer = new GridLayer(container, 5);
+gridLayer.setScales(xScale, yScale);
+gridLayer.draw();
+```
+
+### Notes
+
+- Grid draws 10 vertical and 10 horizontal lines by default
+- Grid color is hardcoded to `#333` (consider using GridLayer for backgrounds)
+- Grid lines span the full range of each axis

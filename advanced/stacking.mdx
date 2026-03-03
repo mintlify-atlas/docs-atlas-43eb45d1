@@ -1,0 +1,159 @@
+---
+title: Stacking
+description: Create stacked bar charts to show part-to-whole relationships across categories
+---
+
+Kinetix Charts provides a `stack()` utility function to easily create stacked bar charts. Stacking is useful for showing how different components contribute to a total value across categories.
+
+## How stacking works
+
+The `stack()` function takes an array of data series and transforms them by adding a `y0` property to each data point. This `y0` property represents the baseline (bottom) position of each bar segment, allowing bars to stack on top of each other.
+
+<Steps>
+  <Step title="Prepare your data">
+    Create separate arrays for each series you want to stack:
+    
+    ```typescript
+    const series1 = [{ x: 0, y: 20 }, { x: 1, y: 30 }, { x: 2, y: 25 }];
+    const series2 = [{ x: 0, y: 15 }, { x: 1, y: 20 }, { x: 2, y: 18 }];
+    const series3 = [{ x: 0, y: 10 }, { x: 1, y: 15 }, { x: 2, y: 12 }];
+    ```
+  </Step>
+  
+  <Step title="Apply the stack utility">
+    Import and use the `stack()` function to transform your data:
+    
+    ```typescript
+    import { stack } from 'kinetix-charts';
+    
+    const stackedData = stack([series1, series2, series3]);
+    ```
+    
+    The function adds a `y0` property to each point, representing where each bar segment starts.
+  </Step>
+  
+  <Step title="Create bar series">
+    Create a `BarSeries` for each stacked dataset:
+    
+    ```typescript
+    const colors = ['#6366f1', '#22c55e', '#f59e0b'];
+    const names = ['Product A', 'Product B', 'Product C'];
+    
+    stackedData.forEach((data, i) => {
+      const bar = new BarSeries(container, 1);
+      bar.setScales(chart.xScale, chart.yScale);
+      bar.color = colors[i];
+      bar.name = names[i];
+      bar.setData(data);
+      chart.addSeries(bar);
+    });
+    ```
+  </Step>
+</Steps>
+
+## Complete example
+
+Here's a complete stacked bar chart showing product sales across three months:
+
+```typescript
+import { Chart, BarSeries, stack } from 'kinetix-charts';
+
+const chart = new Chart(container);
+chart.series = [];
+
+// Raw data for each series
+const series1 = [{ x: 0, y: 20 }, { x: 1, y: 30 }, { x: 2, y: 25 }];
+const series2 = [{ x: 0, y: 15 }, { x: 1, y: 20 }, { x: 2, y: 18 }];
+const series3 = [{ x: 0, y: 10 }, { x: 1, y: 15 }, { x: 2, y: 12 }];
+
+// Stack the data (adds y0 property for baseline)
+const stackedData = stack([series1, series2, series3]);
+
+const colors = ['#6366f1', '#22c55e', '#f59e0b'];
+const names = ['Product A', 'Product B', 'Product C'];
+
+stackedData.forEach((data, i) => {
+  const bar = new BarSeries(container, 1);
+  bar.setScales(chart.xScale, chart.yScale);
+  bar.color = colors[i];
+  bar.name = names[i];
+  bar.setData(data);
+  chart.addSeries(bar);
+});
+```
+
+<Note>
+  The `stack()` function is located in `src/utils/stack.ts:3` and automatically calculates the `y0` baseline for each data point by summing all previous series values at that x-coordinate.
+</Note>
+
+## How the y0 property works
+
+The `stack()` utility transforms your data by adding a `y0` property to each point:
+
+- **y0**: The starting position (baseline) of the bar segment
+- **y**: The ending position (top) of the bar segment
+- **Height**: The visual height is `y - y0`
+
+For the first series, `y0` is always 0. For subsequent series, `y0` equals the cumulative sum of all previous series values at that x-coordinate.
+
+<CodeGroup>
+```typescript Before stacking
+[
+  { x: 0, y: 20 },
+  { x: 1, y: 30 },
+  { x: 2, y: 25 }
+]
+```
+
+```typescript After stacking (series 2)
+[
+  { x: 0, y: 35, y0: 20 },  // Stacks on top of series 1 (y0=20)
+  { x: 1, y: 50, y0: 30 },  // Stacks on top of series 1 (y0=30)
+  { x: 2, y: 43, y0: 25 }   // Stacks on top of series 1 (y0=25)
+]
+```
+</CodeGroup>
+
+## Multiple series stacking
+
+You can stack as many series as needed. The `stack()` function handles any number of input arrays:
+
+```typescript
+const stackedData = stack([
+  salesData,
+  costsData,
+  profitData,
+  taxData,
+  otherData
+]);
+```
+
+<Warning>
+  All input series must have the same length and matching x-coordinates. The function assumes all datasets align at the same x values (see `src/utils/stack.ts:13`).
+</Warning>
+
+## Categorical stacking
+
+Stacking works with both numeric and categorical x-axes:
+
+```typescript
+const series1 = [
+  { x: 'Q1', y: 100 },
+  { x: 'Q2', y: 120 },
+  { x: 'Q3', y: 110 },
+  { x: 'Q4', y: 130 }
+];
+
+const series2 = [
+  { x: 'Q1', y: 80 },
+  { x: 'Q2', y: 90 },
+  { x: 'Q3', y: 85 },
+  { x: 'Q4', y: 95 }
+];
+
+const stackedData = stack([series1, series2]);
+```
+
+<Tip>
+  The legend automatically displays all stacked series with their colors, making it easy to identify each component in the stack.
+</Tip>

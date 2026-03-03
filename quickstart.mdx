@@ -1,80 +1,200 @@
 ---
-title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+title: Quickstart
+description: Create your first interactive chart with Kinetix Charts in under 5 minutes
 ---
 
-## Get started in three steps
+# Quickstart
 
-Get your documentation site running locally and make your first customization.
+Get a fully interactive chart running in your application in just a few steps. This guide will walk you through creating a basic line chart with real-time interactivity.
 
-### Step 1: Set up your local environment
+## Create your first chart
 
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
-    
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
-    
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
+<Steps>
+  <Step title="Create an HTML container">
+    Add a container element to your HTML where the chart will be rendered. The chart will automatically adapt to the container's dimensions.
 
-### Step 2: Deploy your changes
+    ```html
+    <div id="chart" style="width: 100%; height: 400px;"></div>
+    ```
 
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
-    
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
+    <Tip>
+    Make sure to set explicit dimensions on the container. Kinetix Charts will fill the container's width and height.
+    </Tip>
+  </Step>
 
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
+  <Step title="Import and initialize the chart">
+    Import the `Chart` class from Kinetix Charts and create a new chart instance with your data.
 
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
+    ```typescript
+    import { Chart } from 'kinetix-charts';
 
-### Step 3: Go live
+    const container = document.getElementById('chart');
 
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
+    const chart = new Chart(container, {
+      theme: 'dark',
+      series: [
+        {
+          type: 'line',
+          name: 'Revenue',
+          color: '#6366f1',
+          data: [
+            { x: 0, y: 10 },
+            { x: 1, y: 25 },
+            { x: 2, y: 18 },
+            { x: 3, y: 35 },
+            { x: 4, y: 28 }
+          ]
+        }
+      ]
+    });
+    ```
+
+    That's it! Your chart is now rendered and fully interactive.
+  </Step>
+
+  <Step title="Try the interactions">
+    The chart comes with built-in interactivity - no additional configuration needed:
+
+    - **Pan**: Click and drag on the chart to pan along the X-axis
+    - **Zoom**: Use your scroll wheel to zoom in and out
+    - **Tooltips**: Hover over data points to see their exact values
+
+    <Note>
+    The Y-axis automatically scales to fit the visible data range when you pan or zoom. This ensures your data is always displayed at an optimal scale.
+    </Note>
+  </Step>
+</Steps>
+
+## Complete working example
+
+Here's a complete HTML file you can use to test Kinetix Charts:
+
+<CodeGroup>
+```html index.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kinetix Charts - Quickstart</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #0f172a;
+    }
+    #chart {
+      width: 100%;
+      height: 400px;
+      background: #1e293b;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div id="chart"></div>
+
+  <script type="module">
+    import { Chart } from 'kinetix-charts';
+
+    const container = document.getElementById('chart');
+
+    const chart = new Chart(container, {
+      theme: 'dark',
+      series: [
+        {
+          type: 'line',
+          name: 'Revenue',
+          color: '#6366f1',
+          data: [
+            { x: 0, y: 10 },
+            { x: 1, y: 25 },
+            { x: 2, y: 18 },
+            { x: 3, y: 35 },
+            { x: 4, y: 28 }
+          ]
+        }
+      ]
+    });
+  </script>
+</body>
+</html>
+```
+
+```typescript app.ts
+import { Chart } from 'kinetix-charts';
+
+const container = document.getElementById('chart');
+
+const chart = new Chart(container, {
+  theme: 'dark',
+  series: [
+    {
+      type: 'line',
+      name: 'Revenue',
+      color: '#6366f1',
+      data: [
+        { x: 0, y: 10 },
+        { x: 1, y: 25 },
+        { x: 2, y: 18 },
+        { x: 3, y: 35 },
+        { x: 4, y: 28 }
+      ]
+    }
+  ]
+});
+```
+</CodeGroup>
+
+## Understanding the configuration
+
+Let's break down the chart configuration:
+
+- **`theme`**: Sets the color scheme (`'light'` or `'dark'`)
+- **`series`**: Array of data series to display on the chart
+  - **`type`**: Chart type (`'line'`, `'bar'`, `'scatter'`, `'pie'`)
+  - **`name`**: Series name shown in the legend and tooltips
+  - **`color`**: Hex color code for the series
+  - **`data`**: Array of data points with `x` and `y` coordinates
+
+<Tip>
+You can add multiple series to the same chart by adding more objects to the `series` array. Each series can have a different type and color.
+</Tip>
+
+## Default features
+
+Every Kinetix Chart includes these features by default:
+
+**Pan and zoom**: Enabled automatically for charts with numeric X-axis values. Pan and zoom are disabled for categorical charts (like bar charts with text labels) to ensure all categories remain visible.
+
+**Tooltips**: Hover over any data point to see its value. For charts with multiple series, the tooltip shows all series values at that X coordinate.
+
+**Responsive sizing**: Charts automatically resize when the container dimensions change.
+
+**Smart legend**: A legend appears in the top-right corner showing all series. It automatically repositions to avoid blocking your data.
+
+**Smooth animations**: All chart types render with smooth animations on initial load.
+
+<Warning>
+Pan and zoom interactions are **disabled** for categorical X-axis charts (e.g., bar charts with text labels like "Jan", "Feb", "Mar"). This ensures all categories remain visible at all times.
+</Warning>
 
 ## Next steps
 
-Now that you have your docs running, explore these key features:
+Now that you have a working chart, explore more features:
 
 <CardGroup cols={2}>
-
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
-
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
-
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
+  <Card title="Chart types" icon="chart-mixed" href="/charts/line">
+    Learn about line, bar, scatter, pie, and stacked charts
+  </Card>
+  <Card title="API reference" icon="code" href="/api/chart">
+    Explore the complete API and configuration options
+  </Card>
+  <Card title="Theming" icon="palette" href="/concepts/theming">
+    Customize colors and themes for your charts
+  </Card>
+  <Card title="Performance" icon="gauge-high" href="/concepts/performance">
+    Optimize charts for large datasets
+  </Card>
 </CardGroup>
-
-<Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
-</Note>

@@ -1,0 +1,201 @@
+---
+title: Theming
+description: Customize the visual appearance of your charts with built-in themes and custom colors
+---
+
+Kinetix Charts provides flexible theming options to match your application's design. You can use built-in light and dark themes, customize series colors, and apply per-slice colors for pie charts.
+
+## Built-in themes
+
+Kinetix Charts comes with two built-in themes optimized for different backgrounds.
+
+### Dark theme
+
+The dark theme is designed for dark backgrounds and provides high contrast for readability.
+
+```typescript
+const chart = new Chart(container, {
+  theme: 'dark',
+  series: [/* ... */]
+});
+```
+
+### Light theme
+
+The light theme works well on light backgrounds and provides a clean, professional appearance.
+
+```typescript
+const chart = new Chart(container, {
+  theme: 'light',
+  series: [/* ... */]
+});
+```
+
+## Setting theme in config
+
+You can set the theme when creating a chart or update it later.
+
+<CodeGroup>
+```typescript Initial configuration
+const chart = new Chart(container, {
+  theme: 'dark',
+  series: [
+    {
+      type: 'line',
+      name: 'Revenue',
+      color: '#6366f1',
+      data: [{ x: 0, y: 10 }, { x: 1, y: 25 }]
+    }
+  ]
+});
+```
+
+```typescript Update existing chart
+// Update theme on existing chart
+chart.update({ theme: 'light' });
+
+// Or use the dedicated method
+chart.setTheme('dark');
+```
+</CodeGroup>
+
+<Note>
+The theme affects axis colors, grid lines, text colors, and legend styling.
+</Note>
+
+## Custom series colors
+
+Each series can have a custom color using any valid CSS color format.
+
+### Setting colors for line series
+
+```typescript
+const chart = new Chart(container, {
+  series: [
+    {
+      type: 'line',
+      name: 'Revenue',
+      color: '#6366f1',  // Indigo
+      data: [{ x: 0, y: 10 }, { x: 1, y: 25 }]
+    },
+    {
+      type: 'line',
+      name: 'Expenses',
+      color: '#ef4444',  // Red
+      data: [{ x: 0, y: 8 }, { x: 1, y: 12 }]
+    }
+  ]
+});
+```
+
+### Setting colors for bar series
+
+```typescript
+const series = new BarSeries(container, 1);
+series.setScales(chart.xScale, chart.yScale);
+series.color = '#22c55e';  // Green
+series.name = 'Sales';
+series.setData([/* ... */]);
+chart.addSeries(series);
+```
+
+### Default color palette
+
+If you don't specify a color, Kinetix Charts automatically assigns colors from a built-in palette:
+
+```typescript
+colors = [
+  '#ef4444', // Red
+  '#f59e0b', // Amber
+  '#10b981', // Green
+  '#3b82f6', // Blue
+  '#06b6d4', // Cyan
+  '#ec4899', // Pink
+  '#6366f1'  // Indigo
+];
+```
+
+<Tip>
+Colors are assigned cyclically, so if you have more than 7 series, the colors will repeat.
+</Tip>
+
+## Per-slice colors for pie charts
+
+Pie and donut charts support custom colors for each slice, allowing you to create visually distinct segments.
+
+```typescript
+const chart = new Chart(container, {
+  series: [
+    {
+      type: 'pie',
+      data: [
+        { label: 'Direct', value: 35, color: '#6366f1' },
+        { label: 'Organic', value: 28, color: '#22c55e' },
+        { label: 'Referral', value: 22, color: '#f59e0b' },
+        { label: 'Social', value: 15, color: '#ec4899' }
+      ]
+    }
+  ],
+  // Hide axes for pie charts
+  xAxis: { visible: false },
+  yAxis: { visible: false }
+});
+```
+
+### Donut charts with custom colors
+
+```typescript
+const pie = new PieSeries(container, 1);
+pie.innerRadius = 0.5;  // Makes it a donut chart
+pie.setData([
+  { label: 'A', value: 30, color: '#ef4444' },
+  { label: 'B', value: 70, color: '#3b82f6' }
+]);
+chart.addSeries(pie);
+```
+
+<Note>
+When you specify colors in the data array for pie charts, those colors take precedence over the series color property.
+</Note>
+
+## Dynamic theme switching
+
+You can change themes dynamically based on user preference or system settings.
+
+```typescript
+// Listen to system theme preference
+const darkModeQuery = window.matchMedia('(prefers-color-scheme: dark)');
+
+function updateChartTheme(isDark: boolean) {
+  chart.setTheme(isDark ? 'dark' : 'light');
+}
+
+// Initial theme
+updateChartTheme(darkModeQuery.matches);
+
+// Listen for changes
+darkModeQuery.addEventListener('change', (e) => {
+  updateChartTheme(e.matches);
+});
+```
+
+## Updating series colors
+
+You can update series colors after the chart is created using the `updateSeries` method.
+
+```typescript
+// Update the color of the first series (index 0)
+chart.updateSeries(0, { 
+  color: '#ef4444',
+  name: 'New Name' 
+});
+```
+
+<Tip>
+Use the `getSeriesInfo()` method to get information about all series including their current colors:
+
+```typescript
+const info = chart.getSeriesInfo();
+// Returns: [{ index: 0, name: 'Sales', color: '#ff0000', visible: true, type: 'line' }, ...]
+```
+</Tip>

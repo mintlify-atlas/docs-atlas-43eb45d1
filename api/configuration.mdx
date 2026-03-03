@@ -1,0 +1,469 @@
+---
+title: Configuration
+description: Complete reference for chart configuration options
+---
+
+The `ChartConfig` interface defines all available options for configuring a chart's appearance, behavior, and data.
+
+## ChartConfig
+
+Main configuration object passed to the Chart constructor or `update()` method.
+
+<ParamField path="width" type="number">
+  Width of the chart in pixels. If not specified, defaults to the container's width.
+</ParamField>
+
+<ParamField path="height" type="number">
+  Height of the chart in pixels. If not specified, defaults to the container's height.
+</ParamField>
+
+<ParamField path="padding" type="object">
+  Padding around the chart area to make room for axes and labels.
+  
+  Default: `{ top: 20, right: 20, bottom: 40, left: 60 }`
+  
+  <ParamField path="padding.top" type="number">Top padding in pixels</ParamField>
+  <ParamField path="padding.right" type="number">Right padding in pixels</ParamField>
+  <ParamField path="padding.bottom" type="number">Bottom padding in pixels</ParamField>
+  <ParamField path="padding.left" type="number">Left padding in pixels</ParamField>
+</ParamField>
+
+<ParamField path="xAxis" type="AxisConfig">
+  Configuration for the X axis. See [AxisConfig](#axisconfig) below.
+</ParamField>
+
+<ParamField path="yAxis" type="AxisConfig">
+  Configuration for the Y axis. See [AxisConfig](#axisconfig) below.
+</ParamField>
+
+<ParamField path="series" type="SeriesConfig[]">
+  Array of series to display on the chart. Each series can be a line, bar, pie, or scatter series. See [SeriesConfig](#seriesconfig) below.
+</ParamField>
+
+<ParamField path="theme" type="'light' | 'dark'">
+  Visual theme for the chart. Affects background colors, text colors, and axis colors.
+  
+  Default: `'light'`
+</ParamField>
+
+<ParamField path="startFromZero" type="boolean">
+  When `true`, the Y axis will start from zero if all Y values are positive. This provides better visual context for magnitude comparisons.
+  
+  Default: `true`
+</ParamField>
+
+<ParamField path="startXFromZero" type="boolean">
+  When `true`, the X axis will start from zero if all X values are positive.
+  
+  Default: `false`
+</ParamField>
+
+### Example
+
+```typescript
+const config: ChartConfig = {
+  width: 800,
+  height: 400,
+  padding: { top: 20, right: 30, bottom: 50, left: 70 },
+  theme: 'dark',
+  startFromZero: true,
+  xAxis: {
+    type: 'numeric',
+    visible: true,
+    xTickCount: 10
+  },
+  yAxis: {
+    visible: true,
+    yTickCount: 8
+  },
+  series: [
+    {
+      type: 'line',
+      name: 'Sales',
+      color: '#ef4444',
+      data: [
+        { x: 0, y: 10 },
+        { x: 1, y: 20 },
+        { x: 2, y: 15 }
+      ]
+    }
+  ]
+};
+```
+
+## AxisConfig
+
+Configuration options for chart axes (both X and Y).
+
+<ParamField path="min" type="number">
+  Minimum value for the axis domain. If not specified, calculated automatically from data.
+</ParamField>
+
+<ParamField path="max" type="number">
+  Maximum value for the axis domain. If not specified, calculated automatically from data.
+</ParamField>
+
+<ParamField path="type" type="'numeric' | 'datetime' | 'categorical'">
+  Type of scale to use for the axis.
+  
+  - `'numeric'`: Linear scale for numeric data (default)
+  - `'datetime'`: Time scale for date/time data
+  - `'categorical'`: Categorical scale for string labels
+  
+  Default: `'numeric'`
+</ParamField>
+
+<ParamField path="visible" type="boolean">
+  Whether to display the axis. When `false`, hides both axis lines and labels.
+  
+  Default: `true` (except for pie charts, which default to `false`)
+</ParamField>
+
+<ParamField path="xTickCount" type="number">
+  Number of tick marks and labels to display on the X axis.
+  
+  Default: `10`
+</ParamField>
+
+<ParamField path="yTickCount" type="number">
+  Number of tick marks and labels to display on the Y axis.
+  
+  Default: `10`
+</ParamField>
+
+<ParamField path="xLabelFormat" type="(val: number) => string">
+  Custom formatter function for X axis labels. Receives the numeric value and should return a formatted string.
+  
+  ```typescript
+  xLabelFormat: (val) => `$${val.toFixed(2)}`
+  ```
+</ParamField>
+
+<ParamField path="yLabelFormat" type="(val: number) => string">
+  Custom formatter function for Y axis labels. Receives the numeric value and should return a formatted string.
+  
+  ```typescript
+  yLabelFormat: (val) => `${val}%`
+  ```
+</ParamField>
+
+<ParamField path="gridColor" type="string">
+  Color for grid lines (CSS color string). If not specified, uses theme default.
+</ParamField>
+
+<ParamField path="textColor" type="string">
+  Color for axis labels and tick text (CSS color string). If not specified, uses theme default.
+</ParamField>
+
+<ParamField path="font" type="string">
+  CSS font specification for axis labels.
+  
+  Default: `'12px sans-serif'`
+</ParamField>
+
+<ParamField path="theme" type="'light' | 'dark'">
+  Theme for the axis appearance. Usually set automatically from the chart's theme.
+  
+  Default: `'light'`
+</ParamField>
+
+<ParamField path="scrollable" type="boolean">
+  For categorical axes, enables horizontal scrolling when there are many categories. When `true`, the chart becomes horizontally scrollable if there are more than 20 categories or if explicitly enabled.
+  
+  Default: `false` (auto-enabled for >20 categories)
+</ParamField>
+
+### Example
+
+<CodeGroup>
+```typescript Numeric axis
+const xAxis: AxisConfig = {
+  type: 'numeric',
+  min: 0,
+  max: 100,
+  visible: true,
+  xTickCount: 10,
+  xLabelFormat: (val) => val.toFixed(1)
+};
+```
+
+```typescript Datetime axis
+const xAxis: AxisConfig = {
+  type: 'datetime',
+  visible: true,
+  xLabelFormat: (val) => new Date(val).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric'
+  })
+};
+```
+
+```typescript Categorical axis
+const xAxis: AxisConfig = {
+  type: 'categorical',
+  visible: true,
+  scrollable: true
+};
+```
+</CodeGroup>
+
+## SeriesConfig
+
+Union type for all series configurations. Each chart can contain multiple series of different types.
+
+```typescript
+type SeriesConfig =
+  | LineSeriesConfig
+  | BarSeriesConfig
+  | PieSeriesConfig
+  | ScatterSeriesConfig;
+```
+
+### BaseSeriesConfig
+
+Common properties shared by all series types.
+
+<ParamField path="type" type="string" required>
+  Type of series: `'line'`, `'bar'`, `'pie'`, or `'scatter'`
+</ParamField>
+
+<ParamField path="name" type="string">
+  Display name for the series, shown in the legend and tooltips.
+</ParamField>
+
+<ParamField path="color" type="string">
+  CSS color string for the series. If not specified, a color is automatically assigned from the chart's color palette.
+</ParamField>
+
+<ParamField path="visible" type="boolean">
+  Whether the series is visible. Hidden series are not rendered but remain in the chart.
+  
+  Default: `true`
+</ParamField>
+
+### LineSeriesConfig
+
+Configuration for line series.
+
+<ParamField path="type" type="'line'" required>
+  Must be `'line'`
+</ParamField>
+
+<ParamField path="data" type="Point[]" required>
+  Array of data points. Each point must have `x` and `y` properties.
+  
+  ```typescript
+  type Point = { x: number | string; y: number };
+  ```
+</ParamField>
+
+```typescript Example
+const lineSeries: LineSeriesConfig = {
+  type: 'line',
+  name: 'Temperature',
+  color: '#3b82f6',
+  data: [
+    { x: 0, y: 20 },
+    { x: 1, y: 22 },
+    { x: 2, y: 19 },
+    { x: 3, y: 23 }
+  ]
+};
+```
+
+### BarSeriesConfig
+
+Configuration for bar series.
+
+<ParamField path="type" type="'bar'" required>
+  Must be `'bar'`
+</ParamField>
+
+<ParamField path="data" type="Point[]" required>
+  Array of data points. Each point must have `x` and `y` properties.
+</ParamField>
+
+<ParamField path="barWidth" type="number">
+  Width of each bar in pixels. If not specified, calculated automatically based on available space.
+</ParamField>
+
+<ParamField path="deltaMode" type="boolean">
+  When `true`, shows bar heights relative to the minimum value in the dataset. This is useful for visualizing small variations in data with large baseline values.
+  
+  Default: `false`
+</ParamField>
+
+<ParamField path="align" type="'center' | 'start' | 'end'">
+  Alignment of bars relative to their X value.
+  
+  - `'center'`: Bar is centered on the X value (default for regular bar charts)
+  - `'start'`: Bar starts at the X value (useful for histograms)
+  - `'end'`: Bar ends at the X value
+  
+  Default: `'center'`
+</ParamField>
+
+<ParamField path="stacked" type="boolean">
+  Reserved for future stacked bar chart support. Currently not used directly by series.
+</ParamField>
+
+```typescript Example
+const barSeries: BarSeriesConfig = {
+  type: 'bar',
+  name: 'Revenue',
+  color: '#10b981',
+  barWidth: 30,
+  align: 'center',
+  data: [
+    { x: 0, y: 100 },
+    { x: 1, y: 150 },
+    { x: 2, y: 120 },
+    { x: 3, y: 180 }
+  ]
+};
+```
+
+### PieSeriesConfig
+
+Configuration for pie and donut charts.
+
+<ParamField path="type" type="'pie'" required>
+  Must be `'pie'`
+</ParamField>
+
+<ParamField path="data" type="PieData[]" required>
+  Array of pie segments. Each segment has a label and value.
+  
+  ```typescript
+  type PieData = { label: string; value: number };
+  ```
+</ParamField>
+
+<ParamField path="innerRadius" type="number">
+  Inner radius as a fraction of the outer radius (0-1). Use values > 0 to create a donut chart.
+  
+  - `0`: Full pie chart (default)
+  - `0.5`: Donut chart with 50% inner radius
+  - `0.7`: Donut chart with 70% inner radius
+  
+  Default: `0`
+</ParamField>
+
+```typescript Example
+const pieSeries: PieSeriesConfig = {
+  type: 'pie',
+  name: 'Market Share',
+  innerRadius: 0.5, // Creates a donut chart
+  data: [
+    { label: 'Product A', value: 30 },
+    { label: 'Product B', value: 45 },
+    { label: 'Product C', value: 25 }
+  ]
+};
+```
+
+### ScatterSeriesConfig
+
+Configuration for scatter plot series.
+
+<ParamField path="type" type="'scatter'" required>
+  Must be `'scatter'`
+</ParamField>
+
+<ParamField path="data" type="Point[]" required>
+  Array of data points. Each point must have `x` and `y` properties.
+</ParamField>
+
+<ParamField path="radius" type="number">
+  Radius of each scatter point in pixels.
+  
+  Default: `4`
+</ParamField>
+
+```typescript Example
+const scatterSeries: ScatterSeriesConfig = {
+  type: 'scatter',
+  name: 'Data Points',
+  color: '#ec4899',
+  radius: 5,
+  data: [
+    { x: 10, y: 20 },
+    { x: 15, y: 35 },
+    { x: 20, y: 25 },
+    { x: 25, y: 40 }
+  ]
+};
+```
+
+## Complete example
+
+Here's a complete configuration example combining multiple features:
+
+```typescript
+import { Chart, ChartConfig } from 'kinetix-charts';
+
+const config: ChartConfig = {
+  theme: 'dark',
+  padding: { top: 30, right: 30, bottom: 60, left: 80 },
+  startFromZero: true,
+  
+  xAxis: {
+    type: 'numeric',
+    visible: true,
+    xTickCount: 12,
+    xLabelFormat: (val) => `Month ${Math.floor(val)}`
+  },
+  
+  yAxis: {
+    visible: true,
+    yTickCount: 8,
+    yLabelFormat: (val) => `$${(val / 1000).toFixed(0)}K`
+  },
+  
+  series: [
+    {
+      type: 'line',
+      name: 'Revenue',
+      color: '#10b981',
+      data: [
+        { x: 1, y: 45000 },
+        { x: 2, y: 52000 },
+        { x: 3, y: 48000 },
+        { x: 4, y: 61000 },
+        { x: 5, y: 58000 },
+        { x: 6, y: 67000 }
+      ]
+    },
+    {
+      type: 'line',
+      name: 'Expenses',
+      color: '#ef4444',
+      data: [
+        { x: 1, y: 38000 },
+        { x: 2, y: 41000 },
+        { x: 3, y: 39000 },
+        { x: 4, y: 43000 },
+        { x: 5, y: 42000 },
+        { x: 6, y: 45000 }
+      ]
+    },
+    {
+      type: 'bar',
+      name: 'Profit',
+      color: '#3b82f6',
+      align: 'center',
+      data: [
+        { x: 1, y: 7000 },
+        { x: 2, y: 11000 },
+        { x: 3, y: 9000 },
+        { x: 4, y: 18000 },
+        { x: 5, y: 16000 },
+        { x: 6, y: 22000 }
+      ]
+    }
+  ]
+};
+
+const container = document.getElementById('chart');
+const chart = new Chart(container, config);
+```

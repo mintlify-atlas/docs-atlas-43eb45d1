@@ -1,0 +1,298 @@
+---
+title: Export
+description: Export charts as high-resolution PNG images with custom dimensions and zoom levels
+---
+
+Kinetix Charts provides powerful export functionality that allows you to generate high-quality PNG images of your charts. You can export at different resolutions, custom dimensions, and even with specific zoom/pan windows.
+
+## Export methods
+
+The `Chart` class provides two methods for exporting:
+
+### downloadImage()
+
+Directly downloads the chart as a PNG file:
+
+```typescript
+chart.downloadImage('my-chart.png');
+```
+
+This method triggers a browser download with the specified filename.
+
+### getCanvasImage()
+
+Returns a data URL that you can use programmatically:
+
+```typescript
+const dataUrl = chart.getCanvasImage();
+
+// Use in an <img> tag
+const img = document.createElement('img');
+img.src = dataUrl;
+
+// Or send to a server
+fetch('/api/save-chart', {
+  method: 'POST',
+  body: JSON.stringify({ image: dataUrl })
+});
+```
+
+<Note>
+  Both methods are defined in `src/core/Chart.ts:908` and `src/core/Chart.ts:1064` respectively. They share the same underlying rendering logic.
+</Note>
+
+## Export options
+
+Both export methods accept an options object to customize the output:
+
+### scale
+
+Control the resolution multiplier. Higher values produce sharper images:
+
+```typescript
+// Standard resolution (1x)
+chart.downloadImage('chart-1x.png', { scale: 1 });
+
+// Retina resolution (2x) - default
+chart.downloadImage('chart-2x.png', { scale: 2 });
+
+// High resolution for print (3x)
+chart.downloadImage('chart-3x.png', { scale: 3 });
+```
+
+<Tip>
+  The default scale is 2x (retina resolution), which produces crisp images on high-DPI displays. For web use, 2x is usually sufficient. For print materials, consider 3x or higher.
+</Tip>
+
+### width and height
+
+Export at custom dimensions different from the current chart size:
+
+```typescript
+// Export at specific dimensions
+chart.downloadImage('chart-custom.png', {
+  width: 1200,   // pixels
+  height: 600,   // pixels
+  scale: 2       // 2400x1200 actual resolution
+});
+```
+
+This is useful for:
+- Creating consistent-sized exports regardless of container size
+- Generating images for specific display requirements
+- Producing different aspect ratios
+
+### window
+
+Export a specific zoom or pan window of your data:
+
+```typescript
+// Export only data between x: 0 and x: 50
+chart.downloadImage('chart-zoomed.png', {
+  window: {
+    xMin: 0,
+    xMax: 50
+  }
+});
+
+// Export specific X and Y ranges
+chart.downloadImage('chart-window.png', {
+  window: {
+    xMin: 0,
+    xMax: 100,
+    yMin: 0,
+    yMax: 500
+  }
+});
+```
+
+<Warning>
+  The `window` option works with numeric/index domain coordinates. It is not supported for scrollable categorical charts (see `src/core/Chart.ts:940-953`).
+</Warning>
+
+## Complete export example
+
+Here's a comprehensive example showing different export scenarios:
+
+```typescript
+import { Chart } from 'kinetix-charts';
+
+const chart = new Chart(container, {
+  theme: 'dark',
+  series: [{
+    type: 'line',
+    name: 'Revenue',
+    data: [/* ... */],
+    color: '#6366f1'
+  }]
+});
+
+// Basic export (default settings)
+chart.downloadImage('revenue-chart.png');
+
+// High-resolution export for presentation
+chart.downloadImage('revenue-chart-hd.png', {
+  scale: 3,      // 3x resolution
+  width: 1920,   // HD width
+  height: 1080   // HD height
+});
+
+// Export current view as data URL
+const dataUrl = chart.getCanvasImage({ scale: 2 });
+console.log(dataUrl); // data:image/png;base64,...
+
+// Export specific data range
+chart.downloadImage('q1-revenue.png', {
+  window: { xMin: 0, xMax: 90 },  // First quarter
+  scale: 2
+});
+```
+
+## Retina and high-DPI displays
+
+The `scale` parameter is specifically designed to handle high-DPI displays:
+
+```typescript
+// From src/core/Chart.ts:988-994
+const tempCanvas = document.createElement('canvas');
+tempCanvas.width = targetWidth * scale;
+tempCanvas.height = targetHeight * scale;
+const ctx = tempCanvas.getContext('2d');
+
+ctx.scale(scale, scale);  // Scale context for high-DPI
+```
+
+This ensures:
+- Text remains crisp on retina displays
+- Lines and shapes are rendered at full resolution
+- File size remains reasonable (PNG compression)
+
+<CodeGroup>
+```typescript Standard resolution
+chart.downloadImage('chart.png', { scale: 1 });
+// 800x400 chart → 800x400 PNG
+// Good for: Web thumbnails, low-bandwidth
+```
+
+```typescript Retina resolution (default)
+chart.downloadImage('chart.png', { scale: 2 });
+// 800x400 chart → 1600x800 PNG
+// Good for: Web, presentations, high-DPI displays
+```
+
+```typescript Print resolution
+chart.downloadImage('chart.png', { scale: 4 });
+// 800x400 chart → 3200x1600 PNG
+// Good for: Print materials, posters
+```
+</CodeGroup>
+
+## State preservation
+
+The export methods carefully preserve the current chart state. They:
+
+1. Save the current dimensions, scales, and configuration
+2. Apply the export settings temporarily
+3. Render the chart to an off-screen canvas
+4. Restore the original state
+5. Return the image data
+
+```typescript
+// From src/core/Chart.ts:922-928
+// 1. SAVE STATE
+const originalWidth = this.wrapper.style.width;
+const originalHeight = this.wrapper.style.height;
+const originalXDomain = [...this.xScale.domain];
+const originalYDomain = [...this.yScale.domain];
+const originalOverflow = this.container.style.overflow;
+```
+
+This means:
+- Exporting doesn't affect the visible chart
+- Users won't see any flickering or changes
+- Multiple exports can be performed safely
+- Interactive state (zoom, pan) is preserved
+
+## Background color handling
+
+Exports automatically use the correct background color based on your theme:
+
+```typescript
+// From src/core/Chart.ts:997-999
+const isDark = this.axisLayer.config.theme === 'dark';
+ctx.fillStyle = isDark ? '#111827' : '#ffffff';
+ctx.fillRect(0, 0, targetWidth, targetHeight);
+```
+
+- **Dark theme**: `#111827` (dark gray)
+- **Light theme**: `#ffffff` (white)
+
+<Tip>
+  All chart layers are rendered in the correct z-index order during export, ensuring the exported image looks identical to what's displayed on screen (see `src/core/Chart.ts:1002-1010`).
+</Tip>
+
+## Programmatic usage
+
+The `getCanvasImage()` method is perfect for integrating exports into your application workflow:
+
+```typescript
+// Save to server
+async function saveChartToServer(chart: Chart) {
+  const imageData = chart.getCanvasImage({ scale: 2 });
+  
+  const response = await fetch('/api/charts', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      name: 'revenue-chart',
+      image: imageData,
+      timestamp: Date.now()
+    })
+  });
+  
+  return response.json();
+}
+
+// Generate multiple exports
+function exportAllViews(chart: Chart) {
+  const views = [
+    { name: 'full', window: { xMin: 0, xMax: 365 } },
+    { name: 'q1', window: { xMin: 0, xMax: 90 } },
+    { name: 'q2', window: { xMin: 90, xMax: 180 } },
+    { name: 'q3', window: { xMin: 180, xMax: 270 } },
+    { name: 'q4', window: { xMin: 270, xMax: 365 } }
+  ];
+  
+  views.forEach(view => {
+    chart.downloadImage(`${view.name}.png`, {
+      window: view.window,
+      scale: 2
+    });
+  });
+}
+```
+
+## Layer composition
+
+During export, all visible layers are composited in order:
+
+```typescript
+// From src/core/Chart.ts:1002-1010
+const layers = [...this.sceneGraph.layers].sort(
+  (a, b) => a.zIndex - b.zIndex
+);
+
+layers.forEach((layer) => {
+  if (layer.visible && layer.canvas) {
+    ctx.drawImage(layer.canvas, 0, 0, targetWidth, targetHeight);
+  }
+});
+```
+
+This ensures the exported image includes:
+- Grid (if visible)
+- All visible series
+- Axes and labels
+- Legend
+
+Hidden series and layers are automatically excluded from the export.

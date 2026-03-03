@@ -1,0 +1,221 @@
+---
+title: Bar charts
+description: Compare values across categories with bar charts
+---
+
+Bar charts display data using rectangular bars, making them perfect for comparing values across different categories or showing distribution of data.
+
+## When to use bar charts
+
+Bar charts are ideal for:
+- Comparing values across different categories
+- Showing discrete data points
+- Displaying rankings or distributions
+- Visualizing survey results or categorical data
+
+## Basic example
+
+Create a bar chart with categorical X-axis values:
+
+```typescript
+import { Chart, BarSeries } from 'kinetix-charts';
+
+const container = document.getElementById('chart');
+const chart = new Chart(container);
+chart.series = [];
+
+const bar = new BarSeries(container, 1);
+bar.setScales(chart.xScale, chart.yScale);
+bar.color = '#22c55e';
+bar.name = 'Sales';
+
+// Categorical data - text labels on X-axis
+bar.setData([
+  { x: 'Jan', y: 45 },
+  { x: 'Feb', y: 62 },
+  { x: 'Mar', y: 38 },
+  { x: 'Apr', y: 71 }
+]);
+
+chart.addSeries(bar);
+```
+
+## Numeric and categorical X-axis support
+
+Bar charts support both numeric and categorical (text) X-axis values:
+
+<CodeGroup>
+```typescript Categorical
+bar.setData([
+  { x: 'Product A', y: 120 },
+  { x: 'Product B', y: 85 },
+  { x: 'Product C', y: 160 }
+]);
+```
+
+```typescript Numeric
+bar.setData([
+  { x: 2020, y: 120 },
+  { x: 2021, y: 145 },
+  { x: 2022, y: 160 }
+]);
+```
+</CodeGroup>
+
+<Tip>
+If your categorical data looks like numbers (e.g., "2020", "2021"), explicitly set the axis type to 'categorical' to prevent them from being parsed as numeric values.
+</Tip>
+
+## Configuration options
+
+### Bar width
+
+Control the width of bars relative to the category slot (0-1):
+
+```typescript
+bar.barWidth = 0.8; // 80% of available space (default)
+bar.barWidth = 0.5; // 50% for narrower bars
+bar.barWidth = 1.0; // 100% for full-width bars
+```
+
+### Delta mode
+
+When your data has minor variations, delta mode shows bar heights relative to the minimum value, making differences more visible:
+
+```typescript
+const chart = new Chart(container, {
+  series: [{
+    type: 'bar',
+    name: 'Sales',
+    data: [
+      { x: 'Mon', y: 1000 },
+      { x: 'Tue', y: 1002 },
+      { x: 'Wed', y: 1001 },
+      { x: 'Thu', y: 1005 }
+    ],
+    deltaMode: true  // Magnifies visual differences
+  }]
+});
+```
+
+<Note>
+**Without deltaMode:** All bars look nearly identical height (all ~1000).
+
+**With deltaMode:** Bar height differences are magnified, making variations clearly visible.
+
+The actual Y values are still displayed in tooltips.
+</Note>
+
+### Alignment
+
+Control how bars align relative to their X value:
+
+```typescript
+bar.align = 'center'; // Default - bar centered on X value
+bar.align = 'start';  // Bar starts at X value (for histograms)
+bar.align = 'end';    // Bar ends at X value
+```
+
+## Histogram mode
+
+To render histograms using a numeric axis, align bars to the start of the data point:
+
+```typescript
+const chart = new Chart(container, {
+  series: [{
+    type: 'bar',
+    data: [
+      { x: 0, y: 15 },
+      { x: 10, y: 28 },
+      { x: 20, y: 42 },
+      { x: 30, y: 35 }
+    ],
+    barWidth: 1.0,    // Full width
+    align: 'start',   // Align bar to start of X value
+    color: '#3b82f6'
+  }]
+});
+```
+
+<Steps>
+  <Step title="Set barWidth to 1.0">
+    Use full width bars to eliminate gaps between bars.
+  </Step>
+  
+  <Step title="Set align to 'start'">
+    Align bars to start at each X value for proper histogram display.
+  </Step>
+  
+  <Step title="Use numeric X values">
+    Ensure your X values are numbers representing bin edges.
+  </Step>
+</Steps>
+
+## Stacked bar chart
+
+Use the `stack()` utility to prepare data for stacking:
+
+```typescript
+import { Chart, BarSeries, stack } from 'kinetix-charts';
+
+const chart = new Chart(container);
+chart.series = [];
+
+// Raw data for each series
+const series1 = [{ x: 0, y: 20 }, { x: 1, y: 30 }, { x: 2, y: 25 }];
+const series2 = [{ x: 0, y: 15 }, { x: 1, y: 20 }, { x: 2, y: 18 }];
+const series3 = [{ x: 0, y: 10 }, { x: 1, y: 15 }, { x: 2, y: 12 }];
+
+// Stack the data (adds y0 property for baseline)
+const stackedData = stack([series1, series2, series3]);
+
+const colors = ['#6366f1', '#22c55e', '#f59e0b'];
+const names = ['Product A', 'Product B', 'Product C'];
+
+stackedData.forEach((data, i) => {
+  const bar = new BarSeries(container, 1);
+  bar.setScales(chart.xScale, chart.yScale);
+  bar.color = colors[i];
+  bar.name = names[i];
+  bar.setData(data);
+  chart.addSeries(bar);
+});
+```
+
+<Note>
+The `stack()` utility adds a `y0` property to each data point, which represents the baseline for stacking. Each bar starts where the previous series ended.
+</Note>
+
+## Data format
+
+Bar series accept data with numeric or string X values:
+
+```typescript
+interface Point {
+  x: number | string;
+  y: number;
+}
+```
+
+## Advanced features
+
+### Scrolling for large datasets
+
+For charts with many categorical data points, enable horizontal scrolling:
+
+```typescript
+const chart = new Chart(container, {
+  xAxis: {
+    type: 'categorical',
+    scrollable: true // Enables horizontal scrolling
+  },
+  series: [{
+    type: 'bar',
+    data: [...] // Many categories
+  }]
+});
+```
+
+<Tip>
+Pan and zoom are disabled for categorical X-axis charts since all categories should remain visible. Use scrolling instead for large datasets.
+</Tip>

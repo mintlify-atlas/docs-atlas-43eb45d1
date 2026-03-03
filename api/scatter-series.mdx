@@ -1,0 +1,242 @@
+---
+title: ScatterSeries
+description: Scatter plot series component for rendering individual data points as circles
+---
+
+## Constructor
+
+Creates a new scatter series instance.
+
+```typescript
+const scatterSeries = new ScatterSeries();
+```
+
+## Properties
+
+<ParamField path="color" type="string" default="#4f46e5">
+  Color of the scatter points. Defaults to Indigo-600.
+</ParamField>
+
+<ParamField path="name" type="string" default="Series">
+  Name of the series displayed in the legend.
+</ParamField>
+
+<ParamField path="visible" type="boolean" default="true">
+  Whether the series is visible on the chart.
+</ParamField>
+
+<ParamField path="data" type="Point[]" default="[]">
+  Array of data points to render. Each point has `x` and `y` properties.
+</ParamField>
+
+<ParamField path="radius" type="number" default="4">
+  Radius of each scatter point in pixels.
+</ParamField>
+
+<ParamField path="visibleData" type="Point[]" default="[]">
+  Downsampled data points actually rendered. Uses LTTB algorithm for datasets over 2000 points.
+</ParamField>
+
+<ParamField path="xScale" type="Scale | null" default="null">
+  Scale instance for X-axis coordinate transformation.
+</ParamField>
+
+<ParamField path="yScale" type="Scale | null" default="null">
+  Scale instance for Y-axis coordinate transformation.
+</ParamField>
+
+<ParamField path="animationEnabled" type="boolean" default="true">
+  Whether animations are enabled for this series.
+</ParamField>
+
+<ParamField path="animationDuration" type="number" default="600">
+  Duration of animations in milliseconds.
+</ParamField>
+
+## Methods
+
+### setData
+
+Updates the series data and triggers animation if enabled.
+
+<ParamField path="data" type="Point[]" required>
+  Array of data points where each point contains `x` and `y` values.
+</ParamField>
+
+```typescript
+scatterSeries.setData([
+  { x: 5, y: 10 },
+  { x: 10, y: 20 },
+  { x: 15, y: 15 },
+  { x: 20, y: 25 }
+]);
+```
+
+### setScales
+
+Sets the X and Y scales for coordinate transformation.
+
+<ParamField path="xScale" type="Scale" required>
+  Scale instance for X-axis transformation.
+</ParamField>
+
+<ParamField path="yScale" type="Scale" required>
+  Scale instance for Y-axis transformation.
+</ParamField>
+
+```typescript
+scatterSeries.setScales(xScale, yScale);
+```
+
+### render
+
+Renders the scatter series on the canvas. Called automatically during the chart render cycle.
+
+```typescript
+scatterSeries.render();
+```
+
+### enableAnimation
+
+Enables animation for the series with an optional custom duration.
+
+<ParamField path="duration" type="number" default="600">
+  Animation duration in milliseconds.
+</ParamField>
+
+```typescript
+scatterSeries.enableAnimation(800);
+```
+
+### disableAnimation
+
+Disables animation for the series.
+
+```typescript
+scatterSeries.disableAnimation();
+```
+
+### startAnimation
+
+Manually triggers the render animation.
+
+```typescript
+scatterSeries.startAnimation();
+```
+
+### getDataAt
+
+Returns the data point closest to the given position within a threshold.
+
+<ParamField path="point" type="Point" required>
+  Position to query, typically mouse coordinates in pixels.
+</ParamField>
+
+<ResponseField name="return" type="Point | null">
+  The closest data point within a 10-pixel threshold based on 2D Euclidean distance, or null if none found.
+</ResponseField>
+
+```typescript
+const dataPoint = scatterSeries.getDataAt({ x: 100, y: 200 });
+```
+
+## Data format
+
+Scatter series accepts an array of Point objects:
+
+<CodeGroup>
+```typescript Numeric data
+const data: Point[] = [
+  { x: 5.2, y: 10.1 },
+  { x: 10.5, y: 20.3 },
+  { x: 15.1, y: 15.8 },
+  { x: 20.8, y: 25.2 }
+];
+```
+
+```typescript Categorical X
+const data: Point[] = [
+  { x: "Group A", y: 10 },
+  { x: "Group B", y: 20 },
+  { x: "Group C", y: 15 },
+  { x: "Group D", y: 25 }
+];
+```
+
+```typescript Correlation plot
+const data: Point[] = [
+  { x: 23, y: 45 },
+  { x: 45, y: 67 },
+  { x: 34, y: 52 },
+  { x: 56, y: 78 },
+  { x: 12, y: 34 }
+];
+```
+</CodeGroup>
+
+## Configuration
+
+When using the Chart API, configure scatter series through the series config:
+
+```typescript ScatterSeriesConfig
+interface ScatterSeriesConfig {
+  type: "scatter";
+  data: Point[];
+  color?: string;
+  visible?: boolean;
+  name?: string;
+  radius?: number;
+}
+```
+
+## Point radius
+
+Customize the size of scatter points:
+
+```typescript
+// Small points (2px radius)
+scatterSeries.radius = 2;
+
+// Default points (4px radius)
+scatterSeries.radius = 4;
+
+// Large points (8px radius)
+scatterSeries.radius = 8;
+```
+
+## Performance
+
+Scatter series automatically downsamples datasets with more than 2000 points using the LTTB (Largest-Triangle-Three-Buckets) algorithm. This maintains visual distribution while improving rendering performance. This only applies to numeric X values; categorical data is not downsampled.
+
+Points outside the visible canvas area are automatically skipped during rendering for additional performance optimization.
+
+## Hit testing
+
+The `getDataAt` method uses 2D Euclidean distance to find the closest point to the mouse position. For categorical X scales, it performs a linear scan. For numeric X scales, it uses binary search optimization before calculating 2D distances.
+
+The hit detection threshold is 10 pixels in both directions.
+
+## Animation
+
+By default, scatter series animates on initial render and data updates. The animation:
+- Uses easeOutCubic easing function
+- Progressively renders points from left to right
+- Duration is 600ms by default
+- Can be customized or disabled
+
+```typescript
+// Customize animation duration
+scatterSeries.enableAnimation(1000);
+
+// Disable animation
+scatterSeries.disableAnimation();
+```
+
+## Use cases
+
+Scatter plots are ideal for:
+- Visualizing correlations between two variables
+- Identifying clusters and outliers in data
+- Displaying distribution patterns
+- Comparing multiple discrete data points
+- Scientific and statistical analysis

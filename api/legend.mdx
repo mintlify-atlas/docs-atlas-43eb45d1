@@ -1,0 +1,125 @@
+---
+title: Legend
+description: Automatic legend generation with smart positioning and theme support
+---
+
+The legend displays a color-coded list of series in the chart, automatically positioned to avoid obscuring data.
+
+## LegendLayer
+
+Renders a legend box with series names and colors, featuring intelligent hover-based repositioning.
+
+### Constructor
+
+```typescript
+new LegendLayer(container: HTMLElement, zIndex?: number)
+```
+
+<ParamField path="container" type="HTMLElement" required>
+  The DOM element to attach the canvas layer to
+</ParamField>
+
+<ParamField path="zIndex" type="number" default="100">
+  The stacking order of this layer (typically highest to stay on top)
+</ParamField>
+
+### Methods
+
+<ResponseField name="setSeries" type="(series: Series[]) => void">
+  Sets the series to display in the legend. Automatically deduplicates by name
+
+  ```typescript
+  legendLayer.setSeries([
+    { name: "Revenue", color: "#3b82f6" },
+    { name: "Expenses", color: "#ef4444" }
+  ]);
+  ```
+</ResponseField>
+
+<ResponseField name="setTheme" type="(theme: 'light' | 'dark') => void">
+  Updates the legend's visual theme
+
+  ```typescript
+  legendLayer.setTheme("dark");
+  ```
+</ResponseField>
+
+<ResponseField name="draw" type="() => void">
+  Renders the legend to the canvas
+
+  ```typescript
+  legendLayer.draw();
+  ```
+</ResponseField>
+
+## Automatic positioning
+
+The legend intelligently positions itself to stay out of the way:
+
+- **Default position**: Top-right corner
+- **On hover**: Moves to opposite corner (top-right ↔ top-left)
+- **Smooth behavior**: Automatically recalculates bounds after moving
+
+This ensures the legend never obscures important data points, even as users interact with the chart.
+
+## Theme support
+
+The legend automatically adapts to light and dark themes:
+
+### Light theme (default)
+
+- Background: `rgba(255, 255, 255, 0.8)`
+- Border: `#e2e8f0`
+- Text: `#0f172a`
+
+### Dark theme
+
+- Background: `rgba(15, 23, 42, 0.8)`
+- Border: `#334155`
+- Text: `#f8fafc`
+
+## Series deduplication
+
+The `setSeries` method automatically removes duplicate entries based on:
+
+1. Series name (if present)
+2. Series color (if no name)
+3. Falls back to "unnamed" key
+
+This prevents the legend from showing the same series multiple times.
+
+## Example
+
+```typescript
+const legendLayer = new LegendLayer(container, 100);
+
+// Set theme
+legendLayer.setTheme("dark");
+
+// Add series
+legendLayer.setSeries([
+  { name: "Sales", color: "#10b981" },
+  { name: "Target", color: "#f59e0b" },
+  { name: "Forecast", color: "#8b5cf6" }
+]);
+
+// Render
+legendLayer.draw();
+```
+
+## Styling properties
+
+The legend uses the following internal styling (not configurable via API):
+
+- **Padding**: 10px around content
+- **Item height**: 20px per series
+- **Item gap**: 10px between color box and text
+- **Color box size**: 12x12px
+- **Font**: 12px Inter, sans-serif
+- **Border radius**: 6px
+
+## Notes
+
+- The legend listens for `mousemove` events on its canvas to trigger repositioning
+- Bounds are recalculated on every draw for accurate hit testing
+- The legend uses `roundRect` for rounded corners (requires modern browsers)

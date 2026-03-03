@@ -1,0 +1,119 @@
+---
+title: stack
+description: Utility function for preparing data to be rendered as stacked bar charts
+---
+
+The `stack()` function transforms multiple datasets into a stacked format by adding a `y0` property to each data point. This property defines the baseline for each stacked layer, allowing you to create stacked bar charts where series are visually stacked on top of each other.
+
+## Function signature
+
+```typescript
+function stack(datasets: Point[][]): Point[][]
+```
+
+### Parameters
+
+<ParamField path="datasets" type="Point[][]" required>
+  An array of datasets to stack. Each dataset is an array of `Point` objects with `x` and `y` properties.
+  
+  All datasets must have:
+  - The same length
+  - Matching `x` values at corresponding indices
+</ParamField>
+
+### Returns
+
+<ResponseField name="stacked" type="Point[][]">
+  An array of stacked datasets. Each point includes an additional `y0` property representing the baseline value for stacking.
+  
+  **Point structure:**
+  ```typescript
+  {
+    x: number | string,  // Original x value
+    y: number,           // Cumulative y value (y0 + original y)
+    y0: number           // Baseline value for stacking
+  }
+  ```
+</ResponseField>
+
+## How it works
+
+The function processes data points at each x-coordinate position:
+
+1. For the first series, `y0 = 0` and `y` equals the cumulative value
+2. For subsequent series, `y0` equals the previous cumulative total
+3. Each series is stacked on top of the previous one
+
+This creates the baseline offsets needed for the chart renderer to visually stack the bars.
+
+## Example
+
+<CodeGroup>
+```typescript Stacked bar chart
+import { Chart, BarSeries, stack } from 'kinetix-charts';
+
+const chart = new Chart(container);
+chart.series = [];
+
+// Raw data for each series
+const series1 = [{ x: 0, y: 20 }, { x: 1, y: 30 }, { x: 2, y: 25 }];
+const series2 = [{ x: 0, y: 15 }, { x: 1, y: 20 }, { x: 2, y: 18 }];
+const series3 = [{ x: 0, y: 10 }, { x: 1, y: 15 }, { x: 2, y: 12 }];
+
+// Stack the data (adds y0 property for baseline)
+const stackedData = stack([series1, series2, series3]);
+
+const colors = ['#6366f1', '#22c55e', '#f59e0b'];
+const names = ['Product A', 'Product B', 'Product C'];
+
+stackedData.forEach((data, i) => {
+  const bar = new BarSeries(container, 1);
+  bar.setScales(chart.xScale, chart.yScale);
+  bar.color = colors[i];
+  bar.name = names[i];
+  bar.setData(data);
+  chart.addSeries(bar);
+});
+```
+
+```typescript Categorical data
+import { Chart, BarSeries, stack } from 'kinetix-charts';
+
+const chart = new Chart(container);
+chart.series = [];
+
+// Categorical X-axis values
+const revenue = [
+  { x: 'Q1', y: 100 },
+  { x: 'Q2', y: 120 },
+  { x: 'Q3', y: 115 },
+  { x: 'Q4', y: 140 }
+];
+
+const costs = [
+  { x: 'Q1', y: 60 },
+  { x: 'Q2', y: 70 },
+  { x: 'Q3', y: 65 },
+  { x: 'Q4', y: 80 }
+];
+
+const stackedData = stack([revenue, costs]);
+
+stackedData.forEach((data, i) => {
+  const bar = new BarSeries(container, 1);
+  bar.setScales(chart.xScale, chart.yScale);
+  bar.color = i === 0 ? '#22c55e' : '#ef4444';
+  bar.name = i === 0 ? 'Revenue' : 'Costs';
+  bar.setData(data);
+  chart.addSeries(bar);
+});
+```
+</CodeGroup>
+
+## Important notes
+
+- All input datasets must have the same length
+- Corresponding data points across datasets must have matching `x` values
+- The function assumes datasets are aligned by index position
+- Works with both numeric and categorical (string) x-values
+- The returned data points include a `y0` property that bar series use for positioning

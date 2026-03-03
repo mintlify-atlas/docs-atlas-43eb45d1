@@ -1,0 +1,107 @@
+---
+title: Introduction
+description: High-performance, dependency-free charting library built with TypeScript and HTML5 Canvas
+---
+
+# Kinetix Charts
+
+Kinetix Charts is a **high-performance, dependency-free charting library** built with TypeScript and HTML5 Canvas. Designed for modern web applications, it delivers exceptional performance even with massive datasets while maintaining a zero-dependency footprint.
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Get your first chart running in under 5 minutes
+  </Card>
+  <Card title="Chart types" icon="chart-line" href="/charts/line">
+    Explore line, bar, scatter, pie, and stacked charts
+  </Card>
+  <Card title="API reference" icon="code" href="/api/chart">
+    Complete API documentation for all chart features
+  </Card>
+  <Card title="Installation" icon="download" href="/installation">
+    Install Kinetix Charts in your project
+  </Card>
+</CardGroup>
+
+## What makes Kinetix Charts different
+
+Kinetix Charts is built from the ground up to solve the performance and complexity challenges of modern data visualization:
+
+<Note>
+Unlike other charting libraries that rely on heavy dependencies, Kinetix Charts is completely self-contained. The entire library has **zero runtime dependencies** - just import and use.
+</Note>
+
+### Built for performance
+
+Canvas-based rendering enables Kinetix Charts to handle **100,000+ data points** smoothly. The library automatically applies LTTB (Largest-Triangle-Three-Buckets) downsampling for datasets exceeding 2,000 points, preserving the visual shape while dramatically reducing render overhead.
+
+### Interactive by default
+
+Every chart comes with built-in pan, zoom, and tooltip support out of the box. No configuration required - users can immediately explore their data:
+
+- **Pan**: Click and drag to navigate along the X-axis
+- **Zoom**: Scroll to zoom in and out  
+- **Tooltips**: Hover over data points to see precise values
+
+### Intelligent and adaptive
+
+Kinetix Charts automatically handles the details so you don't have to:
+
+- **Responsive**: Automatically adapts to container size changes
+- **Smart legend**: Moves position to avoid occluding your data
+- **Auto-scaling**: Y-axis intelligently scales based on visible data range
+- **Smart formatting**: Axis labels automatically format large numbers (1M, 25K)
+
+## Key features
+
+<CardGroup cols={2}>
+  <Card title="High performance" icon="gauge-high">
+    Canvas-based rendering handles 100k+ data points smoothly
+  </Card>
+  <Card title="Zero dependencies" icon="box-open">
+    No external runtime dependencies - just import and use
+  </Card>
+  <Card title="Responsive" icon="mobile-screen">
+    Automatically adapts to container size changes
+  </Card>
+  <Card title="LTTB downsampling" icon="chart-area">
+    Largest-Triangle-Three-Buckets algorithm for efficient large dataset rendering
+  </Card>
+  <Card title="Interactive" icon="hand-pointer">
+    Built-in pan, zoom, and tooltip support
+  </Card>
+  <Card title="Themeable" icon="palette">
+    Light and dark themes with customizable colors
+  </Card>
+  <Card title="Smart legend" icon="list">
+    Auto-positioning legend that avoids data occlusion
+  </Card>
+  <Card title="Multiple chart types" icon="chart-mixed">
+    Line, bar, scatter, pie/donut, and stacked charts
+  </Card>
+  <Card title="Smooth animations" icon="film">
+    Beautiful render animations for all chart types
+  </Card>
+</CardGroup>
+
+## Supported chart types
+
+**Line charts**: Perfect for time-series and continuous data visualization
+
+**Bar charts**: Support both numeric and categorical X-axis values with optional delta mode for highlighting small variations
+
+**Scatter plots**: Ideal for displaying correlation between two variables
+
+**Pie and donut charts**: Show proportions of a whole with customizable inner radius
+
+**Stacked bar charts**: Compare multiple data series with automatic stacking
+
+## Ready to get started?
+
+<CardGroup cols={2}>
+  <Card title="Installation" icon="download" href="/installation">
+    Install Kinetix Charts with your preferred package manager
+  </Card>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Create your first chart in minutes
+  </Card>
+</CardGroup>

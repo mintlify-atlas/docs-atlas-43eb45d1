@@ -1,0 +1,171 @@
+---
+title: Line charts
+description: Display continuous data and time-series with line charts
+---
+
+Line charts are ideal for visualizing continuous data, trends over time, and sequential measurements. They connect data points with lines to show how values change.
+
+## When to use line charts
+
+Line charts work best when:
+- Displaying time-series data (stock prices, temperature over time)
+- Showing trends and patterns in continuous data
+- Comparing multiple data series over the same range
+- Visualizing data with a natural progression or order
+
+## Basic example
+
+Here's a simple line chart showing revenue over time:
+
+```typescript
+import { Chart, LineSeries } from 'kinetix-charts';
+
+const container = document.getElementById('chart');
+const chart = new Chart(container);
+chart.series = [];
+
+const line = new LineSeries(container, 1);
+line.setScales(chart.xScale, chart.yScale);
+line.color = '#6366f1';
+line.name = 'Series A';
+line.setData([
+  { x: 0, y: 10 },
+  { x: 1, y: 25 },
+  { x: 2, y: 18 }
+]);
+
+chart.addSeries(line);
+```
+
+<Note>
+Line charts automatically use LTTB (Largest-Triangle-Three-Buckets) downsampling for datasets with more than 2,000 points, maintaining visual accuracy while improving performance.
+</Note>
+
+## Configuration options
+
+### Color
+
+Customize the line color using the `color` property:
+
+```typescript
+line.color = '#6366f1'; // Indigo
+```
+
+### Name
+
+Set a series name that appears in the legend and tooltips:
+
+```typescript
+line.name = 'Revenue';
+```
+
+## Data format
+
+Line series accept data as an array of points with `x` and `y` coordinates:
+
+```typescript
+interface Point {
+  x: number;
+  y: number;
+}
+```
+
+<Steps>
+  <Step title="Prepare your data">
+    Organize your data as an array of objects with `x` and `y` properties. The `x` values should be numeric.
+  </Step>
+  
+  <Step title="Create the series">
+    Instantiate a `LineSeries` with the container element and z-index.
+  </Step>
+  
+  <Step title="Configure the series">
+    Set the scales, color, and name properties.
+  </Step>
+  
+  <Step title="Load the data">
+    Call `setData()` with your data array to render the line chart.
+  </Step>
+</Steps>
+
+## Multiple series
+
+You can add multiple line series to compare different datasets:
+
+<CodeGroup>
+```typescript Simple
+const line1 = new LineSeries(container, 1);
+line1.setScales(chart.xScale, chart.yScale);
+line1.color = '#6366f1';
+line1.name = 'Series A';
+line1.setData([{ x: 0, y: 10 }, { x: 1, y: 25 }, { x: 2, y: 18 }]);
+
+const line2 = new LineSeries(container, 1);
+line2.setScales(chart.xScale, chart.yScale);
+line2.color = '#22c55e';
+line2.name = 'Series B';
+line2.setData([{ x: 0, y: 15 }, { x: 1, y: 20 }, { x: 2, y: 30 }]);
+
+chart.addSeries(line1);
+chart.addSeries(line2);
+```
+
+```typescript Using config
+const chart = new Chart(container, {
+  theme: 'dark',
+  series: [
+    {
+      type: 'line',
+      name: 'Revenue',
+      color: '#6366f1',
+      data: [
+        { x: 0, y: 10 },
+        { x: 1, y: 25 },
+        { x: 2, y: 18 },
+        { x: 3, y: 35 },
+        { x: 4, y: 28 }
+      ]
+    }
+  ]
+});
+```
+</CodeGroup>
+
+<Tip>
+Line charts support interactive pan and zoom by default when using a numeric X-axis. Users can click and drag to pan, or scroll to zoom in and out.
+</Tip>
+
+## Advanced features
+
+### Animation control
+
+Control render animations for your line series:
+
+```typescript
+// Disable animation
+line.disableAnimation();
+
+// Enable with custom duration (ms)
+line.enableAnimation(800);
+
+// Manually trigger animation
+line.startAnimation();
+```
+
+### Large datasets
+
+Line charts handle large datasets efficiently using automatic downsampling:
+
+```typescript
+// Works smoothly with 100k+ points
+const largeData = [];
+for (let i = 0; i < 100000; i++) {
+  largeData.push({ x: i, y: Math.sin(i / 1000) * 50 + 50 });
+}
+
+line.setData(largeData); // LTTB automatically kicks in
+```
+
+<Note>
+Downsampling only applies to datasets with numeric X values. Categorical data is not downsampled.
+</Note>

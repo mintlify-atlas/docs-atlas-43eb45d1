@@ -1,0 +1,190 @@
+---
+title: Scatter plots
+description: Visualize correlations and data distributions with scatter plots
+---
+
+Scatter plots display individual data points as dots on a two-dimensional chart, making them perfect for identifying correlations, clusters, and outliers in your data.
+
+## When to use scatter plots
+
+Scatter plots are ideal for:
+- Showing correlation between two variables
+- Identifying clusters and patterns in data
+- Detecting outliers and anomalies
+- Displaying distributions across two dimensions
+- Comparing data points without connecting lines
+
+## Basic example
+
+Create a scatter plot to display correlation between two variables:
+
+```typescript
+import { Chart, ScatterSeries } from 'kinetix-charts';
+
+const container = document.getElementById('chart');
+const chart = new Chart(container);
+chart.series = [];
+
+const scatter = new ScatterSeries(container, 1);
+scatter.setScales(chart.xScale, chart.yScale);
+scatter.color = '#f59e0b';
+scatter.radius = 5;
+scatter.name = 'Data Points';
+scatter.setData([
+  { x: 10, y: 20 },
+  { x: 25, y: 45 },
+  { x: 40, y: 30 }
+]);
+
+chart.addSeries(scatter);
+```
+
+## Configuration options
+
+### Radius
+
+Control the size of the scatter points using the `radius` property:
+
+```typescript
+scatter.radius = 4; // Default size
+scatter.radius = 6; // Larger points
+scatter.radius = 2; // Smaller points
+```
+
+### Color
+
+Customize the point color:
+
+```typescript
+scatter.color = '#f59e0b'; // Orange
+scatter.color = '#3b82f6'; // Blue
+scatter.color = '#ef4444'; // Red
+```
+
+### Name
+
+Set a series name for the legend and tooltips:
+
+```typescript
+scatter.name = 'Data Points';
+```
+
+## Data format
+
+Scatter series require data as an array of points with numeric `x` and `y` coordinates:
+
+```typescript
+interface Point {
+  x: number;
+  y: number;
+}
+```
+
+<Steps>
+  <Step title="Prepare your data">
+    Format your data as an array of objects with numeric `x` and `y` properties.
+  </Step>
+  
+  <Step title="Create the series">
+    Instantiate a `ScatterSeries` with the container element and z-index.
+  </Step>
+  
+  <Step title="Set the radius">
+    Configure the point size using the `radius` property.
+  </Step>
+  
+  <Step title="Load the data">
+    Call `setData()` with your data array to render the scatter plot.
+  </Step>
+</Steps>
+
+## Multiple scatter series
+
+Compare different datasets by adding multiple scatter series:
+
+```typescript
+const scatter1 = new ScatterSeries(container, 1);
+scatter1.setScales(chart.xScale, chart.yScale);
+scatter1.color = '#f59e0b';
+scatter1.radius = 5;
+scatter1.name = 'Group A';
+scatter1.setData([
+  { x: 10, y: 20 },
+  { x: 25, y: 45 },
+  { x: 40, y: 30 }
+]);
+
+const scatter2 = new ScatterSeries(container, 1);
+scatter2.setScales(chart.xScale, chart.yScale);
+scatter2.color = '#3b82f6';
+scatter2.radius = 5;
+scatter2.name = 'Group B';
+scatter2.setData([
+  { x: 15, y: 35 },
+  { x: 30, y: 50 },
+  { x: 45, y: 40 }
+]);
+
+chart.addSeries(scatter1);
+chart.addSeries(scatter2);
+```
+
+<Tip>
+Use different colors for each scatter series to make it easy to distinguish between datasets.
+</Tip>
+
+## Advanced features
+
+### Large datasets
+
+Scatter plots efficiently handle large datasets using automatic downsampling:
+
+```typescript
+// Works smoothly with thousands of points
+const largeData = [];
+for (let i = 0; i < 10000; i++) {
+  largeData.push({
+    x: Math.random() * 100,
+    y: Math.random() * 100
+  });
+}
+
+scatter.setData(largeData);
+```
+
+<Note>
+For datasets with more than 2,000 points, LTTB (Largest-Triangle-Three-Buckets) downsampling is automatically applied to maintain performance while preserving visual accuracy.
+</Note>
+
+### Animation control
+
+Control render animations for your scatter series:
+
+```typescript
+// Disable animation
+scatter.disableAnimation();
+
+// Enable with custom duration (ms)
+scatter.enableAnimation(800);
+
+// Manually trigger animation
+scatter.startAnimation();
+```
+
+### Interactive features
+
+Scatter plots support interactive features by default:
+
+- **Pan**: Click and drag to pan the chart
+- **Zoom**: Scroll to zoom in and out
+- **Tooltips**: Hover over points to see their values
+
+```typescript
+// Programmatic pan and zoom
+chart.pan(50, 0);           // Pan 50 pixels right
+chart.zoom(1.5, { x: 100, y: 100 }); // Zoom 1.5x at point
+```
+
+<Note>
+The Y-axis automatically scales to fit the visible data range when panning or zooming.
+</Note>
